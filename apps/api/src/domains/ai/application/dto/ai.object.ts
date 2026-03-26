@@ -43,7 +43,7 @@ export class AITokenTransactionObject {
   @Field(() => Int)
   balanceAfter: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   description?: string | null;
 
   @Field()

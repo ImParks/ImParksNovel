@@ -558,6 +558,15 @@ export const PURCHASE_EPISODE_MUTATION = `
   }
 `;
 
+export const RENT_EPISODE_MUTATION = `
+  mutation RentEpisode($episodeId: ID!, $days: Int!) {
+    rentEpisode(episodeId: $episodeId, days: $days) {
+      id
+      expiresAt
+    }
+  }
+`;
+
 export const PREPARE_COIN_CHARGE_MUTATION = `
   mutation PrepareCoinCharge($packageId: ID!) {
     prepareCoinCharge(packageId: $packageId) {
@@ -579,6 +588,40 @@ export const CONFIRM_COIN_CHARGE_MUTATION = `
         amount
         createdAt
       }
+    }
+  }
+`;
+
+export const PREPARE_MEMBERSHIP_SUBSCRIPTION_MUTATION = `
+  mutation PrepareMembershipSubscription($tier: MembershipTier!) {
+    prepareMembershipSubscription(tier: $tier) {
+      paymentKey
+      orderId
+      amount
+    }
+  }
+`;
+
+export const CONFIRM_MEMBERSHIP_SUBSCRIPTION_MUTATION = `
+  mutation ConfirmMembershipSubscription($input: ConfirmSubscriptionInput!) {
+    confirmMembershipSubscription(input: $input) {
+      id
+      tier
+      startDate
+      endDate
+      isActive
+    }
+  }
+`;
+
+export const CANCEL_MEMBERSHIP_MUTATION = `
+  mutation CancelMembership {
+    cancelMembership {
+      id
+      tier
+      startDate
+      endDate
+      isActive
     }
   }
 `;

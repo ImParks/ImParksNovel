@@ -47,7 +47,7 @@ export class SearchFiltersInput {
   @IsEnum(NovelStatus)
   status?: NovelStatus;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   @IsBoolean()
   isAdultOnly?: boolean;

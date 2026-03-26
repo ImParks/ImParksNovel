@@ -37,7 +37,7 @@ export class CreateCommentInput {
   @MaxLength(1000, { message: '댓글은 최대 1000자까지 가능합니다.' })
   content: string;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   isSpoiler?: boolean;
 }
@@ -71,7 +71,7 @@ export class ReportInput {
   @IsNotEmpty()
   reason: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(1000)

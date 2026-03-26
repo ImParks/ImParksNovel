@@ -12,16 +12,20 @@ RUN pnpm install --frozen-lockfile
 
 # Development stage
 FROM base AS development
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 WORKDIR /app/apps/web
 EXPOSE 3000
 CMD ["pnpm", "dev"]
 
 # Builder stage
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 WORKDIR /app
 RUN pnpm --filter web build
 

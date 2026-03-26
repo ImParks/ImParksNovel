@@ -19,7 +19,7 @@ export class NovelObject {
   @Field()
   synopsis: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   coverImageUrl?: string;
 
   @Field()
@@ -55,7 +55,7 @@ export class NovelObject {
   @Field(() => Int)
   totalSupports: number;
 
-  @Field({ nullable: true })
+  @Field(() => Float, { nullable: true })
   aiContributionRatio?: number;
 
   @Field()
@@ -116,19 +116,19 @@ export class EpisodeObject {
   @Field(() => Int)
   commentCount: number;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   scheduledAt?: Date;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   publishedAt?: Date;
 
   @Field()
   isEdited: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   editedAt?: Date;
 
-  @Field({ nullable: true })
+  @Field(() => Float, { nullable: true })
   aiContributionRatio?: number;
 
   @Field()
@@ -166,7 +166,7 @@ export class DraftObject {
   @Field(() => ID)
   id: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   episodeId?: string;
 
   @Field()
@@ -175,13 +175,13 @@ export class DraftObject {
   @Field()
   authorId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   title?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   content?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   lastSyncedAt?: Date;
 
   @Field()
@@ -212,7 +212,7 @@ export class SerializationScheduleObject {
   @Field(() => Int, { nullable: true })
   serialCount?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   preferredTime?: string;
 
   @Field()
@@ -265,7 +265,7 @@ export class PageInfo {
   @Field()
   hasNextPage: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   endCursor?: string;
 }
 

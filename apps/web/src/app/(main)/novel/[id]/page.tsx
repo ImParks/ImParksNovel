@@ -118,6 +118,11 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
   const [episodes, setEpisodes] = useState<any[]>([]);
   const [, setAuthorProfile] = useState<any>(null);
   const [similarNovels, setSimilarNovels] = useState<any[]>([]);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [hasMoreEpisodes, setHasMoreEpisodes] = useState(false);
+  const [episodeCursor, setEpisodeCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fallback mock 데이터
   const mockNovelData = MOCK_NOVEL_DETAILS[id];
@@ -148,7 +153,7 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
 
         const novel = novelDetailResult.novelDetail.novel;
 
-        // 2. Episodes 쿼리 (전체 목록)
+        // 2. Episodes 쿼리 (페이지네이션)
         const episodesResult = await gql<EpisodesData>(`
           query Episodes($novelId: ID!, $first: Int) {
             episodes(novelId: $novelId, first: $first) {
@@ -162,7 +167,7 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
               totalCount
             }
           }
-        `, { novelId: id, first: 100 });
+        `, { novelId: id, first: 20 });
 
         // 3. Author Profile 쿼리
         const authorResult = await gql<AuthorProfileData>(`
@@ -172,6 +177,25 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
             }
           }
         `, { userId: novel.authorId });
+
+        // 4. Check bookmark/like status (if authenticated)
+        try {
+          const bookmarkResult = await gql<{ isBookmarked: boolean }>(`
+            query IsBookmarked($novelId: ID!) {
+              isBookmarked(novelId: $novelId)
+            }
+          `, { novelId: id });
+          setIsBookmarked(bookmarkResult.isBookmarked);
+
+          const likeResult = await gql<{ isLiked: boolean }>(`
+            query IsLiked($targetType: LikeTargetType!, $targetId: ID!) {
+              isLiked(targetType: $targetType, targetId: $targetId)
+            }
+          `, { targetType: 'NOVEL', targetId: id });
+          setIsLiked(likeResult.isLiked);
+        } catch (err) {
+          // User not authenticated, ignore
+        }
 
         // 데이터 변환 및 설정
         setNovelData({
@@ -193,6 +217,9 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
           viewCount: edge.node.viewCount,
           publishedAt: new Date(edge.node.publishedAt).toLocaleDateString('ko-KR'),
         })));
+
+        setHasMoreEpisodes(episodesResult.episodes.pageInfo.hasNextPage);
+        setEpisodeCursor(episodesResult.episodes.pageInfo.endCursor);
 
         setSimilarNovels(novelDetailResult.novelDetail.similarNovels.map(item => ({
           id: item.novel.id,
@@ -250,6 +277,80 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
     if (episodeFilter === 'paid') return !ep.isFree;
     return true;
   });
+
+  const handleLoadMoreEpisodes = async () => {
+    if (!hasMoreEpisodes || loadingMore || !episodeCursor) return;
+
+    setLoadingMore(true);
+    try {
+      const episodesResult = await gql<EpisodesData>(`
+        query Episodes($novelId: ID!, $first: Int, $after: String) {
+          episodes(novelId: $novelId, first: $first, after: $after) {
+            edges {
+              node {
+                id novelId episodeNumber title wordCount status isFree price
+                viewCount likeCount commentCount publishedAt
+              }
+            }
+            pageInfo { hasNextPage endCursor }
+            totalCount
+          }
+        }
+      `, { novelId: id, first: 20, after: episodeCursor });
+
+      const newEpisodes = episodesResult.episodes.edges.map(edge => ({
+        id: edge.node.id,
+        number: edge.node.episodeNumber,
+        title: edge.node.title,
+        isFree: edge.node.isFree,
+        price: edge.node.price,
+        viewCount: edge.node.viewCount,
+        publishedAt: new Date(edge.node.publishedAt).toLocaleDateString('ko-KR'),
+      }));
+
+      setEpisodes(prev => [...prev, ...newEpisodes]);
+      setHasMoreEpisodes(episodesResult.episodes.pageInfo.hasNextPage);
+      setEpisodeCursor(episodesResult.episodes.pageInfo.endCursor);
+    } catch (error) {
+      console.error('Failed to load more episodes:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleToggleBookmark = async () => {
+    try {
+      const result = await gql<{ toggleBookmark: { isBookmarked: boolean } }>(`
+        mutation ToggleBookmark($novelId: ID!) {
+          toggleBookmark(novelId: $novelId) {
+            isBookmarked
+          }
+        }
+      `, { novelId: id });
+
+      setIsBookmarked(result.toggleBookmark.isBookmarked);
+    } catch (error) {
+      console.error('Failed to toggle bookmark:', error);
+      alert('북마크 설정에 실패했습니다. 로그인이 필요합니다.');
+    }
+  };
+
+  const handleToggleLike = async () => {
+    try {
+      const result = await gql<{ toggleLike: { isLiked: boolean } }>(`
+        mutation ToggleLike($targetType: LikeTargetType!, $targetId: ID!) {
+          toggleLike(targetType: $targetType, targetId: $targetId) {
+            isLiked
+          }
+        }
+      `, { targetType: 'NOVEL', targetId: id });
+
+      setIsLiked(result.toggleLike.isLiked);
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+      alert('좋아요 설정에 실패했습니다. 로그인이 필요합니다.');
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -336,14 +437,24 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
 
           {/* 버튼 */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="primary" size="lg" className="flex-1">
-              첫 화 보기
+            <Link href={`/novel/${id}/episode/${episodes[0]?.id || '1'}`} className="flex-1">
+              <Button variant="primary" size="lg" className="w-full">
+                첫 화 보기
+              </Button>
+            </Link>
+            <Button
+              variant={isBookmarked ? "primary" : "secondary"}
+              size="lg"
+              onClick={handleToggleBookmark}
+            >
+              {isBookmarked ? '북마크됨' : '북마크'}
             </Button>
-            <Button variant="secondary" size="lg">
-              북마크
-            </Button>
-            <Button variant="ghost" size="lg">
-              공유
+            <Button
+              variant={isLiked ? "primary" : "ghost"}
+              size="lg"
+              onClick={handleToggleLike}
+            >
+              {isLiked ? '♥' : '♡'}
             </Button>
           </div>
         </div>
@@ -400,57 +511,73 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
         </div>
 
         {/* 에피소드 목록 */}
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {filteredEpisodes.map((episode) => (
-            <div
-              key={episode.id}
-              className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer border border-gray-200 dark:border-gray-800"
-            >
-              {/* 회차번호 */}
-              <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg font-bold text-gray-900 dark:text-white">
-                {episode.number}
-              </div>
+        <div className="space-y-2">
+          <div className="max-h-96 overflow-y-auto space-y-2">
+            {filteredEpisodes.map((episode) => (
+              <Link
+                key={episode.id}
+                href={`/novel/${id}/episode/${episode.id}`}
+                className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer border border-gray-200 dark:border-gray-800"
+              >
+                {/* 회차번호 */}
+                <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg font-bold text-gray-900 dark:text-white">
+                  {episode.number}
+                </div>
 
-              {/* 제목 및 날짜 */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1">
-                  {episode.title}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {episode.publishedAt}
-                </p>
-              </div>
+                {/* 제목 및 날짜 */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1">
+                    {episode.title}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {episode.publishedAt}
+                  </p>
+                </div>
 
-              {/* 무료/유료 배지 */}
-              <div className="flex-shrink-0">
-                {episode.isFree ? (
-                  <Badge variant="success" size="sm">
-                    무료
-                  </Badge>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="warning" size="sm">
-                      {episode.price} 코인
+                {/* 무료/유료 배지 */}
+                <div className="flex-shrink-0">
+                  {episode.isFree ? (
+                    <Badge variant="success" size="sm">
+                      무료
                     </Badge>
-                    <svg
-                      className="w-4 h-4 text-gray-400"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 1C6.48 1 2 5.48 2 11s4.48 10 10 10 10-4.48 10-10S17.52 1 12 1zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 7 15.5 7 14 7.67 14 8.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 7 8.5 7 7 7.67 7 8.5 7.67 10 8.5 10zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="warning" size="sm">
+                        {episode.price} 코인
+                      </Badge>
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 1C6.48 1 2 5.48 2 11s4.48 10 10 10 10-4.48 10-10S17.52 1 12 1zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 7 15.5 7 14 7.67 14 8.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 7 8.5 7 7 7.67 7 8.5 7.67 10 8.5 10zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
 
-              {/* 조회수 */}
-              <div className="flex-shrink-0 text-right">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  조회 {formatNumber(episode.viewCount)}
-                </p>
-              </div>
+                {/* 조회수 */}
+                <div className="flex-shrink-0 text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    조회 {formatNumber(episode.viewCount)}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* 더보기 버튼 */}
+          {hasMoreEpisodes && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="secondary"
+                onClick={handleLoadMoreEpisodes}
+                disabled={loadingMore}
+              >
+                {loadingMore ? '로딩 중...' : '더보기'}
+              </Button>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

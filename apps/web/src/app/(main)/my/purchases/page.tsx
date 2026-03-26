@@ -32,6 +32,18 @@ interface PurchaseHistoryNode {
   createdAt: string;
 }
 
+interface EpisodeInfo {
+  id: string;
+  novelId: string;
+  title: string;
+  episodeNumber: number;
+}
+
+interface NovelInfo {
+  id: string;
+  title: string;
+}
+
 interface CoinBalance {
   balance: number;
   totalCharged: number;
@@ -56,6 +68,11 @@ export default function PurchasesPage() {
   const [, setCoinBalance] = useState<CoinBalance | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [episodeInfoMap, setEpisodeInfoMap] = useState<Record<string, EpisodeInfo>>({});
+  const [novelInfoMap, setNovelInfoMap] = useState<Record<string, NovelInfo>>({});
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [endCursor, setEndCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // 코인 거래 내역 조회
   useEffect(() => {
@@ -156,7 +173,51 @@ export default function PurchasesPage() {
           { first: 50 }
         );
 
-        setPurchaseHistoryData(data.purchaseHistory.edges.map(edge => edge.node));
+        const purchases = data.purchaseHistory.edges.map(edge => edge.node);
+        setPurchaseHistoryData(purchases);
+        setHasNextPage(data.purchaseHistory.pageInfo.hasNextPage);
+        setEndCursor(data.purchaseHistory.pageInfo.endCursor);
+
+        // Fetch episode info for each purchase
+        const episodeIds = purchases.map(p => p.episodeId);
+        const episodeMap: Record<string, EpisodeInfo> = {};
+        const novelMap: Record<string, NovelInfo> = {};
+
+        for (const episodeId of episodeIds) {
+          try {
+            const episodeResult = await gql<{ episode: EpisodeInfo }>(`
+              query Episode($id: ID!) {
+                episode(id: $id) {
+                  id
+                  novelId
+                  title
+                  episodeNumber
+                }
+              }
+            `, { id: episodeId });
+
+            episodeMap[episodeId] = episodeResult.episode;
+
+            // Fetch novel info if not already fetched
+            if (!novelMap[episodeResult.episode.novelId]) {
+              const novelResult = await gql<{ novel: NovelInfo }>(`
+                query Novel($id: ID!) {
+                  novel(id: $id) {
+                    id
+                    title
+                  }
+                }
+              `, { id: episodeResult.episode.novelId });
+
+              novelMap[episodeResult.episode.novelId] = novelResult.novel;
+            }
+          } catch (err) {
+            console.error(`Failed to fetch episode info for ${episodeId}:`, err);
+          }
+        }
+
+        setEpisodeInfoMap(episodeMap);
+        setNovelInfoMap(novelMap);
       } catch (err) {
         console.error('Failed to fetch purchase history:', err);
         setError('구매 내역을 불러오는데 실패했습니다.');
@@ -231,15 +292,107 @@ export default function PurchasesPage() {
     description: t.description,
   }));
 
-  const purchaseHistory = error ? getPurchaseHistory() : purchaseHistoryData.map(p => ({
-    id: p.id,
-    novelTitle: '소설 제목', // TODO: episode 정보에서 조회 필요
-    episodeTitle: `${p.episodeId}화`,
-    purchaseType: p.purchaseType.toLowerCase() as 'own' | 'rent',
-    cost: p.coinsSpent,
-    date: new Date(p.createdAt).toLocaleDateString('ko-KR'),
-    expiryDate: p.expiresAt ? new Date(p.expiresAt).toLocaleDateString('ko-KR') : null,
-  }));
+  const purchaseHistory = error ? getPurchaseHistory() : purchaseHistoryData.map(p => {
+    const episodeInfo = episodeInfoMap[p.episodeId];
+    const novelInfo = episodeInfo ? novelInfoMap[episodeInfo.novelId] : null;
+
+    return {
+      id: p.id,
+      novelTitle: novelInfo?.title || '소설 제목',
+      episodeTitle: episodeInfo ? `${episodeInfo.episodeNumber}화 - ${episodeInfo.title}` : `${p.episodeId}화`,
+      purchaseType: p.purchaseType.toLowerCase() as 'own' | 'rent',
+      cost: p.coinsSpent,
+      date: new Date(p.createdAt).toLocaleDateString('ko-KR'),
+      expiryDate: p.expiresAt ? new Date(p.expiresAt).toLocaleDateString('ko-KR') : null,
+    };
+  });
+
+  const handleLoadMorePurchases = async () => {
+    if (!hasNextPage || loadingMore || !endCursor) return;
+
+    setLoadingMore(true);
+    try {
+      const data = await gql<{
+        purchaseHistory: {
+          edges: Array<{ node: PurchaseHistoryNode }>,
+          pageInfo: { hasNextPage: boolean; endCursor: string | null },
+          totalCount: number
+        }
+      }>(
+        `query PurchaseHistory($first: Int, $after: String) {
+          purchaseHistory(first: $first, after: $after) {
+            edges {
+              node {
+                id
+                episodeId
+                purchaseType
+                coinsSpent
+                expiresAt
+                createdAt
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            totalCount
+          }
+        }`,
+        { first: 50, after: endCursor }
+      );
+
+      const purchases = data.purchaseHistory.edges.map(edge => edge.node);
+      setPurchaseHistoryData(prev => [...prev, ...purchases]);
+      setHasNextPage(data.purchaseHistory.pageInfo.hasNextPage);
+      setEndCursor(data.purchaseHistory.pageInfo.endCursor);
+
+      // Fetch episode/novel info for new purchases
+      const episodeIds = purchases.map(p => p.episodeId);
+      const episodeMap: Record<string, EpisodeInfo> = { ...episodeInfoMap };
+      const novelMap: Record<string, NovelInfo> = { ...novelInfoMap };
+
+      for (const episodeId of episodeIds) {
+        if (!episodeMap[episodeId]) {
+          try {
+            const episodeResult = await gql<{ episode: EpisodeInfo }>(`
+              query Episode($id: ID!) {
+                episode(id: $id) {
+                  id
+                  novelId
+                  title
+                  episodeNumber
+                }
+              }
+            `, { id: episodeId });
+
+            episodeMap[episodeId] = episodeResult.episode;
+
+            if (!novelMap[episodeResult.episode.novelId]) {
+              const novelResult = await gql<{ novel: NovelInfo }>(`
+                query Novel($id: ID!) {
+                  novel(id: $id) {
+                    id
+                    title
+                  }
+                }
+              `, { id: episodeResult.episode.novelId });
+
+              novelMap[episodeResult.episode.novelId] = novelResult.novel;
+            }
+          } catch (err) {
+            console.error(`Failed to fetch episode info for ${episodeId}:`, err);
+          }
+        }
+      }
+
+      setEpisodeInfoMap(episodeMap);
+      setNovelInfoMap(novelMap);
+    } catch (err) {
+      console.error('Failed to load more purchases:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const currentMembership = membership ? {
     name: membership.tier,
@@ -441,6 +594,19 @@ export default function PurchasesPage() {
               </tbody>
             </table>
           </div>
+
+          {/* 더보기 버튼 */}
+          {hasNextPage && (
+            <div className="flex justify-center p-4">
+              <Button
+                variant="secondary"
+                onClick={handleLoadMorePurchases}
+                disabled={loadingMore}
+              >
+                {loadingMore ? '로딩 중...' : '더보기'}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

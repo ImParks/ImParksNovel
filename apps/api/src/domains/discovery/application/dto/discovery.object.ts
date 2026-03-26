@@ -24,7 +24,7 @@ export class NovelSummaryObject {
   @Field()
   synopsis: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   coverImageUrl?: string;
 
   @Field()
@@ -129,7 +129,7 @@ export class RankingObject {
   @Field(() => RankingPeriod)
   period: RankingPeriod;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   genre?: string;
 
   @Field(() => [RankingEntryObject])

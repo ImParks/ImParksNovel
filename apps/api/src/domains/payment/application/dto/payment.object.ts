@@ -56,10 +56,10 @@ export class CoinTransactionObject {
   @Field(() => Int)
   balanceAfter: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   description?: string | null;
 
-  @Field()
+  @Field(() => Date)
   createdAt: Date;
 }
 
@@ -102,7 +102,7 @@ export class EpisodeOwnershipObject {
   @Field(() => Int)
   coinsSpent: number;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   expiresAt?: Date | null;
 
   @Field()
@@ -148,7 +148,7 @@ export class MembershipObject {
   @Field()
   startedAt: Date;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   expiresAt?: Date;
 
   @Field()
