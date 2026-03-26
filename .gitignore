@@ -30,6 +30,9 @@ apps/api/prisma/migrations/**/migration_lock.toml
 
 # Test
 coverage/
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Debug
 npm-debug.log*

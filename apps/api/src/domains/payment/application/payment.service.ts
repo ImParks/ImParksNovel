@@ -172,16 +172,21 @@ export class PaymentService {
     }
 
     // 3. Toss 결제 확인
-    const paymentResult = await this.tossPayments.confirmPayment(
-      input.paymentKey,
-      input.orderId,
-      input.amount,
-    );
+    try {
+      const tossResponse = await this.tossPayments.confirmPayment(
+        input.paymentKey,
+        input.orderId,
+        input.amount,
+      );
 
-    if (!paymentResult.success) {
+      // Toss 응답 검증 (상태 확인)
+      if (tossResponse.status !== 'COMPLETED') {
+        throw new BadRequestException(`결제 상태가 유효하지 않습니다: ${tossResponse.status}`);
+      }
+    } catch (error) {
       // 결제 실패 기록
       await this.paymentRepository.updatePayment(payment.id, { status: 'FAILED' });
-      throw new BadRequestException(paymentResult.error || '결제가 실패했습니다.');
+      throw error;
     }
 
     // 4. 트랜잭션: 지갑 업데이트 + 거래 기록
@@ -588,15 +593,21 @@ export class PaymentService {
     }
 
     // 2. Toss 결제 확인
-    const paymentResult = await this.tossPayments.confirmPayment(
-      input.paymentKey,
-      input.orderId,
-      input.amount,
-    );
+    try {
+      const tossResponse = await this.tossPayments.confirmPayment(
+        input.paymentKey,
+        input.orderId,
+        input.amount,
+      );
 
-    if (!paymentResult.success) {
+      // Toss 응답 검증 (상태 확인)
+      if (tossResponse.status !== 'COMPLETED') {
+        throw new BadRequestException(`멤버십 결제 상태가 유효하지 않습니다: ${tossResponse.status}`);
+      }
+    } catch (error) {
+      // 결제 실패 기록
       await this.paymentRepository.updatePayment(payment.id, { status: 'FAILED' });
-      throw new BadRequestException(paymentResult.error || '결제가 실패했습니다.');
+      throw error;
     }
 
     // 3. orderId에서 tier 추출
