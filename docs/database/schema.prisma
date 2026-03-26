@@ -1,0 +1,29 @@
+// =============================================================================
+// 소설 연재 플랫폼 - PostgreSQL + Prisma ORM 스키마 (메인)
+// 버전: 1.0 | 작성일: 2026-03-21
+// 테이블: 43개 | ENUM: 25개
+// =============================================================================
+//
+// Prisma multi-file schema 지원 (prismaSchemaFolder preview feature)
+// 도메인별 분할:
+//   schemas/enums.prisma          - 전체 ENUM 정의 (25개)
+//   schemas/user.prisma           - User 도메인 (5개 테이블)
+//   schemas/novel.prisma          - Novel 도메인 (5개 테이블)
+//   schemas/ai.prisma             - AI 도메인 (5개 테이블)
+//   schemas/payment.prisma        - Payment 도메인 (7개 테이블)
+//   schemas/content.prisma        - Content 도메인 (9개 테이블)
+//   schemas/discovery.prisma      - Discovery 도메인 (3개 테이블)
+//   schemas/admin.prisma          - Admin 도메인 (6개 테이블)
+//   schemas/system.prisma         - System 도메인 (3개 테이블)
+//
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex", "prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

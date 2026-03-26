@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Prisma
+apps/api/prisma/migrations/**/migration_lock.toml
+
+# Test
+coverage/
+
+# Debug
+npm-debug.log*
+pnpm-debug.log*
+
+# Docker
+docker-data/
+
+# Claude Code (local agent config/memory)
+.claude/
+.mcp.json
+
+# Logs
+logs/

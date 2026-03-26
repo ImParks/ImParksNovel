@@ -1,0 +1,191 @@
+// =============================================================================
+// Novel 도메인 (5개 테이블)
+// =============================================================================
+
+model Novel {
+  id              String      @id @default(cuid())
+  authorId        String      // User 도메인 ID 참조
+  title           String
+  synopsis        String
+  coverImageUrl   String?
+  genreId         String      // System.genres ID 참조
+  tags            String[]
+  status          NovelStatus @default(DRAFT)
+  isAdultOnly     Boolean     @default(false)
+
+  // 통계 캐시
+  totalEpisodes   Int         @default(0)
+  totalViews      Int         @default(0)
+  totalLikes      Int         @default(0)
+  totalDislikes   Int         @default(0)
+  totalBookmarks  Int         @default(0)
+  totalFavorites  Int         @default(0)
+  totalSupports   Int         @default(0)
+
+  aiContributionRatio Float?
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  episodes                  Episode[]
+  serializationSchedule     NovelSerializationSchedule?
+  serializationMarks        NovelSerializationMark[]
+  novelSettings             NovelSetting[]
+
+  @@index([authorId])
+  @@index([genreId, status, deletedAt])
+  @@index([status, deletedAt])
+  @@index([tags], type: Gin)
+  @@index([createdAt])
+  @@index([totalViews])
+  @@index([totalLikes])
+  @@index([totalBookmarks])
+  @@map("novels")
+}
+
+model Episode {
+  id              String        @id @default(cuid())
+  novelId         String
+  novel           Novel         @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  authorId        String        // User 도메인 ID 참조
+  episodeNumber   Int
+  title           String
+  content         String        // TEXT: 최소 500자, 최대 50,000자 (앱 레벨 검증)
+  wordCount       Int           @default(0)
+  status          EpisodeStatus @default(DRAFT)
+  isFree          Boolean       @default(true)
+  price           Int?          // 코인 가격 (1~10)
+
+  aiContributionRatio Float?
+
+  // 통계 캐시
+  viewCount       Int           @default(0)
+  likeCount       Int           @default(0)
+  dislikeCount    Int           @default(0)
+  recommendCount  Int           @default(0)
+  commentCount    Int           @default(0)
+
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  isEdited        Boolean       @default(false)
+  editedAt        DateTime?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  drafts          EpisodeDraft[]
+  summary         EpisodeSummary?
+
+  @@unique([novelId, episodeNumber])
+  @@index([novelId, status])
+  @@index([novelId, publishedAt])
+  @@index([authorId])
+  @@index([scheduledAt])
+  @@index([deletedAt])
+  @@map("episodes")
+}
+
+model EpisodeDraft {
+  id               String   @id @default(cuid())
+  episodeId        String?
+  episode          Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  novelId          String   // Novel ID 참조
+  authorId         String   // User 도메인 ID 참조
+  title            String?
+  content          String?
+  lastSyncedAt     DateTime?
+  syncedFromDevice String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([authorId, novelId])
+  @@index([updatedAt])
+  @@map("episode_drafts")
+}
+
+model NovelSerializationSchedule {
+  id            String            @id @default(cuid())
+  novelId       String            @unique
+  novel         Novel             @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  type          SerializationType
+  serialDays    String[]          // ["MON","WED","FRI"]
+  serialCount   Int?              // 주N회, 월N회
+  preferredTime String?           // "18:00"
+  timezone      String            @default("Asia/Seoul")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@map("novel_serialization_schedules")
+}
+
+model NovelSerializationMark {
+  id                  String                @id @default(cuid())
+  novelId             String
+  novel               Novel                 @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  markType            SerializationMarkType
+  lastEpisodeAt       DateTime
+  daysOverdue         Int
+  consecutiveReleases Int                   @default(0) // 해제 조건: 2주간 2회 이상
+  lastReleaseAt       DateTime?
+  releaseConditionMet Boolean               @default(false)
+  isActive            Boolean               @default(true)
+  resolvedAt          DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@index([novelId, isActive])
+  @@index([markType, isActive])
+  @@map("novel_serialization_marks")
+}
+
+// =============================================================================
+// Phase 3: 작가 투표 (FEAT-NOVEL-018)
+// =============================================================================
+
+model NovelPoll {
+  id         String       @id @default(cuid())
+  novelId    String       // Novel ID 참조
+  authorId   String       // User 도메인 ID 참조
+  question   String
+  expiresAt  DateTime?
+  isClosed   Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+
+  options    PollOption[]
+  votes      PollVote[]
+
+  @@index([novelId])
+  @@index([authorId])
+  @@map("novel_polls")
+}
+
+model PollOption {
+  id         String     @id @default(cuid())
+  pollId     String
+  poll       NovelPoll  @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionText String
+  sortOrder  Int        @default(0)
+  voteCount  Int        @default(0)
+  createdAt  DateTime   @default(now())
+
+  votes      PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  pollId    String
+  poll      NovelPoll  @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId  String
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId    String     // User 도메인 ID 참조
+  createdAt DateTime   @default(now())
+
+  @@unique([pollId, userId]) // 1인 1표
+  @@index([optionId])
+  @@map("poll_votes")
+}

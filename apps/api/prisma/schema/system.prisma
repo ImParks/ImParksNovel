@@ -1,0 +1,50 @@
+// =============================================================================
+// System 도메인 (3개 테이블)
+// =============================================================================
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String           // User 도메인 ID 참조
+  type        NotificationType
+  title       String
+  message     String
+  relatedType String?          // "NOVEL", "EPISODE", "COMMENT", "SUPPORT" 등
+  relatedId   String?
+  data        Json?
+  isRead      Boolean          @default(false)
+  readAt      DateTime?
+  createdAt   DateTime         @default(now())
+
+  @@index([userId, isRead, createdAt])
+  @@index([userId, type])
+  @@map("notifications")
+}
+
+model Genre {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique // URL용
+  description String?
+  isAdultOnly Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("genres")
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  useCount  Int      @default(0)
+  isBanned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([useCount])
+  @@index([isBanned])
+  @@map("tags")
+}

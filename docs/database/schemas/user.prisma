@@ -1,0 +1,101 @@
+// =============================================================================
+// User 도메인 (5개 테이블)
+// =============================================================================
+
+model User {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  passwordHash      String?
+  nickname          String      @unique
+  nicknameChangedAt DateTime?
+  profileImageUrl   String?
+  bio               String?
+  role              UserRole    @default(READER)
+  status            UserStatus  @default(ACTIVE)
+  isAdultVerified   Boolean     @default(false)
+  emailVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  loginFailCount    Int         @default(0)
+  loginBlockedUntil DateTime?
+  viewerSettings    Json?       // { fontSize: 16, bgColor: "white", lineHeight: 1.8, fontFamily: "default" }
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  deletedAt         DateTime?
+
+  identityVerification UserIdentityVerification?
+  socialAccounts       UserSocialAccount[]
+  authorProfile        AuthorProfile?
+  sessions             UserSession[]
+
+  @@index([email])
+  @@index([nickname])
+  @@index([role, status])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model UserIdentityVerification {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ci          String   @unique
+  di          String
+  name        String
+  birthDate   DateTime
+  phoneNumber String
+  carrier     String?
+  isAdult     Boolean
+  verifiedAt  DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ci])
+  @@map("user_identity_verifications")
+}
+
+model UserSocialAccount {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       SocialProvider
+  providerUserId String
+  email          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("user_social_accounts")
+}
+
+model AuthorProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  authorName    String   @unique
+  authorBio     String?
+  bankName      String?
+  bankAccount   String?
+  accountHolder String?
+  taxId         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([authorName])
+  @@map("author_profiles")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}

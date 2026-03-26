@@ -1,0 +1,142 @@
+// =============================================================================
+// Content 도메인 (9개 테이블)
+// =============================================================================
+
+model Comment {
+  id           String    @id @default(cuid())
+  userId       String    // User 도메인 ID 참조
+  episodeId    String    // Novel.episodes ID 참조
+  content      String    // 최소 1자, 최대 1,000자 (앱 레벨 검증)
+  isSpoiler    Boolean   @default(false)
+  parentId     String?
+  parent       Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies      Comment[] @relation("CommentReplies")
+  depth        Int       @default(0) // 0: 원댓글, 1: 대댓글
+  isPinned     Boolean   @default(false)
+  pinnedAt     DateTime?
+  isEdited     Boolean   @default(false)
+  editedAt     DateTime?
+  likeCount    Int       @default(0)
+  isHidden     Boolean   @default(false)
+  hiddenAt     DateTime?
+  hiddenReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([episodeId, deletedAt, createdAt])
+  @@index([episodeId, deletedAt, likeCount])
+  @@index([parentId])
+  @@index([userId])
+  @@map("comments")
+}
+
+model Bookmark {
+  id               String          @id @default(cuid())
+  userId           String          // User 도메인 ID 참조
+  novelId          String          // Novel 도메인 ID 참조
+  notifyNewEpisode Boolean         @default(true)
+  folderId         String?
+  folder           BookmarkFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  createdAt        DateTime        @default(now())
+
+  @@unique([userId, novelId])
+  @@index([userId])
+  @@map("bookmarks")
+}
+
+model BookmarkFolder {
+  id        String     @id @default(cuid())
+  userId    String     // User 도메인 ID 참조
+  name      String
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  bookmarks Bookmark[]
+
+  @@index([userId])
+  @@map("bookmark_folders")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String   // User 도메인 ID 참조
+  novelId   String   // Novel 도메인 ID 참조
+  createdAt DateTime @default(now())
+
+  @@unique([userId, novelId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model ReadingHistory {
+  id                String   @id @default(cuid())
+  userId            String   // User 도메인 ID 참조
+  novelId           String   // Novel 도메인 ID 참조
+  lastEpisodeId     String   // Novel.episodes ID 참조
+  lastEpisodeNumber Int
+  scrollPosition    Float?
+  lastReadAt        DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, novelId])
+  @@index([userId, lastReadAt])
+  @@map("reading_history")
+}
+
+model Like {
+  id         String         @id @default(cuid())
+  userId     String         // User 도메인 ID 참조
+  targetType LikeTargetType // NOVEL | EPISODE | COMMENT
+  targetId   String
+  createdAt  DateTime       @default(now())
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@map("likes")
+}
+
+model Dislike {
+  id         String            @id @default(cuid())
+  userId     String            // User 도메인 ID 참조
+  targetType DislikeTargetType // NOVEL | EPISODE
+  targetId   String
+  createdAt  DateTime          @default(now())
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@map("dislikes")
+}
+
+model Recommendation {
+  id        String   @id @default(cuid())
+  userId    String   // User 도메인 ID 참조
+  episodeId String   // Novel.episodes ID 참조
+  createdAt DateTime @default(now())
+
+  @@unique([userId, episodeId])
+  @@index([episodeId])
+  @@map("recommendations")
+}
+
+model Report {
+  id          String           @id @default(cuid())
+  reporterId  String           // User 도메인 ID 참조
+  targetType  ReportTargetType
+  targetId    String
+  reason      String
+  description String?
+  status      ReportStatus     @default(PENDING)
+  reviewerId  String?          // 검토 관리자 ID
+  reviewedAt  DateTime?
+  resolution  String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("reports")
+}

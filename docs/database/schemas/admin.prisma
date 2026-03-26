@@ -1,0 +1,114 @@
+// =============================================================================
+// Admin 도메인 (6개 테이블)
+// =============================================================================
+
+model Announcement {
+  id          String     @id @default(cuid())
+  authorId    String     // Admin User ID 참조
+  title       String
+  content     String
+  isPinned    Boolean    @default(false)
+  isPublished Boolean    @default(false)
+  publishedAt DateTime?
+  targetRoles UserRole[] // 빈 배열 = 전체
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  @@index([isPublished, isPinned, publishedAt])
+  @@map("announcements")
+}
+
+model AdminAction {
+  id           String          @id @default(cuid())
+  adminId      String          // 조치한 관리자 ID
+  actionType   AdminActionType
+  targetType   String          // "USER", "NOVEL", "EPISODE", "COMMENT"
+  targetId     String
+  reason       String          // 필수
+  details      Json?
+  suspendUntil DateTime?
+  createdAt    DateTime        @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("admin_actions")
+}
+
+model UserBadge {
+  id         String    @id @default(cuid())
+  targetType String    // "USER" | "NOVEL"
+  targetId   String
+  badgeType  BadgeType
+  customName String?   // CUSTOM 타입
+  customIcon String?
+  reason     String
+  expiresAt  DateTime? // NULL = 영구
+  isActive   Boolean   @default(true)
+  grantedBy  String    // 부여한 관리자 ID
+  revokedBy  String?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([targetType, targetId, isActive])
+  @@index([expiresAt])
+  @@map("user_badges")
+}
+
+model Event {
+  id             String   @id @default(cuid())
+  createdBy      String   // Admin User ID 참조
+  title          String
+  description    String
+  bannerImageUrl String?
+  startAt        DateTime
+  endAt          DateTime
+  conditions     Json?
+  rewards        Json?
+  isPublished    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  participations EventParticipation[]
+
+  @@index([isPublished, startAt, endAt])
+  @@map("events")
+}
+
+model EventParticipation {
+  id             String    @id @default(cuid())
+  eventId        String
+  event          Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId         String    // User 도메인 ID 참조
+  participatedAt DateTime  @default(now())
+  rewardGranted  Boolean   @default(false)
+  rewardDetails  Json?
+  grantedAt      DateTime?
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@map("event_participations")
+}
+
+model PopupNotice {
+  id           String     @id @default(cuid())
+  createdBy    String     // Admin User ID 참조
+  title        String
+  content      String?
+  imageUrl     String?
+  linkUrl      String?
+  startAt      DateTime
+  endAt        DateTime
+  showOnce     Boolean    @default(false)
+  showInterval Int?       // N시간마다 표시
+  targetRoles  UserRole[]
+  targetPages  String[]   // 표시할 페이지 경로
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([isActive, startAt, endAt])
+  @@map("popup_notices")
+}

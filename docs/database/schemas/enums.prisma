@@ -1,0 +1,201 @@
+// =============================================================================
+// ENUM 정의 (25개)
+// =============================================================================
+
+// --- User ---
+enum UserRole {
+  READER
+  AUTHOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  WITHDRAWN
+}
+
+enum SocialProvider {
+  GOOGLE
+  KAKAO
+  NAVER
+}
+
+// --- Novel ---
+enum NovelStatus {
+  DRAFT
+  SERIALIZING
+  HIATUS
+  COMPLETED
+  HIDDEN
+}
+
+enum EpisodeStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+enum SerializationType {
+  DAILY
+  SPECIFIC_DAYS
+  WEEKLY_COUNT
+  BIWEEKLY
+  MONTHLY_COUNT
+  IRREGULAR
+}
+
+enum SerializationMarkType {
+  DELAYED
+  SUSPENDED
+}
+
+// --- AI ---
+enum AIFeatureType {
+  CONTINUE_WRITING
+  IMPROVE_SENTENCE
+  GENERATE_SETTING
+  SUGGEST_PLOT
+  GENERATE_DIALOGUE
+  ANALYZE_STYLE
+  DETECT_ERROR
+  SUMMARIZE
+}
+
+enum AITokenTransactionType {
+  CHARGE
+  USE
+  REFUND
+  BONUS
+  MEMBERSHIP
+}
+
+// --- Payment ---
+enum CoinTransactionType {
+  CHARGE
+  PURCHASE
+  REFUND
+  BONUS
+  SUPPORT_SENT
+  SUPPORT_RECEIVED
+  MEMBERSHIP
+  GIFT_SENT       // Phase 3: 코인 선물 발송
+  GIFT_RECEIVED   // Phase 3: 코인 선물 수령
+}
+
+enum PurchaseType {
+  OWNERSHIP
+  RENTAL_3D
+  RENTAL_7D
+  RENTAL_14D
+}
+
+enum MembershipTier {
+  BASIC
+  PREMIUM
+  VIP
+}
+
+enum MembershipStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+enum SettlementStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  PHONE
+  TRANSFER
+  VIRTUAL_ACCOUNT
+}
+
+// --- Content ---
+enum LikeTargetType {
+  NOVEL
+  EPISODE
+  COMMENT
+}
+
+enum DislikeTargetType {
+  NOVEL
+  EPISODE
+}
+
+enum ReportTargetType {
+  NOVEL
+  EPISODE
+  COMMENT
+  USER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+// --- Admin ---
+enum AdminActionType {
+  WARNING
+  SUSPEND_1D
+  SUSPEND_7D
+  SUSPEND_30D
+  PERMANENT_BAN
+  CONTENT_HIDE
+  CONTENT_DELETE
+  BADGE_GRANT
+  BADGE_REVOKE
+  RESTORE
+}
+
+enum BadgeType {
+  EVENT_WINNER
+  CONTEST_WINNER
+  FEATURED_AUTHOR
+  FEATURED_NOVEL
+  CUSTOM
+}
+
+// --- System ---
+enum NotificationType {
+  NEW_EPISODE
+  COMMENT_REPLY
+  SUPPORT
+  SYSTEM
+  SETTLEMENT
+  SERIALIZATION_CHANGE
+  BADGE
+}
+
+// --- Discovery ---
+enum RankingType {
+  GENRE
+  REALTIME
+  NEW_RELEASE
+  COMPLETED
+  SUPPORT
+}
+
+enum RankingPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  ALL_TIME
+}

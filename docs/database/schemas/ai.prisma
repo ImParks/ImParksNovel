@@ -1,0 +1,96 @@
+// =============================================================================
+// AI 도메인 (5개 테이블)
+// =============================================================================
+
+model AITokenWallet {
+  id           String               @id @default(cuid())
+  userId       String               @unique // User 도메인 ID 참조
+  balance      Int                  @default(0)
+  totalCharged Int                  @default(0)
+  totalUsed    Int                  @default(0)
+  version      Int                  @default(1) // 낙관적 잠금
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  transactions AITokenTransaction[]
+
+  @@map("ai_token_wallets")
+}
+
+model AITokenTransaction {
+  id              String                   @id @default(cuid())
+  walletId        String
+  wallet          AITokenWallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId          String                   // User 도메인 ID 참조
+  type            AITokenTransactionType
+  amount          Int                      // 양수: 충전, 음수: 사용
+  balanceAfter    Int
+  paymentId       String?                  // Payment 도메인 ID 참조
+  generationLogId String?
+  description     String?
+  createdAt       DateTime                 @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("ai_token_transactions")
+}
+
+model AIGenerationLog {
+  id            String        @id @default(cuid())
+  userId        String        // User 도메인 ID 참조
+  novelId       String?       // Novel 도메인 ID 참조
+  episodeId     String?       // Novel.episodes ID 참조
+  featureType   AIFeatureType
+  inputTokens   Int
+  outputTokens  Int
+  totalTokens   Int
+  tokensCharged Int
+  inputText     String?
+  outputText    String?
+  charCount     Int           @default(0)
+  request       Json?         // 요청 파라미터
+  response      Json?         // 응답 메타데이터
+  modelId       String?       // 사용 AI 모델
+  wasAccepted   Boolean?
+  createdAt     DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([novelId])
+  @@index([featureType])
+  @@map("ai_generation_logs")
+}
+
+model NovelSetting {
+  id                String  @id @default(cuid())
+  novelId           String
+  novel             Novel   @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  category          String  // "worldview", "character", "plot", "custom"
+  title             String
+  content           String
+  isAIGenerated     Boolean @default(false)
+  aiGenerationLogId String?
+  sortOrder         Int     @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([novelId, category])
+  @@map("novel_settings")
+}
+
+model EpisodeSummary {
+  id                String   @id @default(cuid())
+  episodeId         String   @unique
+  episode           Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  basicSummary      String?  // 200-500자 (플랫폼 부담)
+  detailedSummary   String?  // 상세 분석 (작가 토큰 차감)
+  characters        Json?    // 등장 캐릭터
+  plotPoints        Json?    // 주요 플롯
+  foreshadowing     Json?    // 복선 요소
+  aiGenerationLogId String?
+  generatedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("episode_summaries")
+}

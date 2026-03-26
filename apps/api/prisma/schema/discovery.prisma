@@ -1,0 +1,74 @@
+// =============================================================================
+// Discovery 도메인 (4개 테이블)
+// =============================================================================
+
+model ViewCount {
+  id        String   @id @default(cuid())
+  episodeId String   // Novel.episodes ID 참조
+  userId    String?  // 로그인 사용자
+  sessionId String?  // 비로그인 세션
+  ipAddress String
+  userAgent String?
+  viewedAt  DateTime @default(now())
+  isValid   Boolean  @default(true) // 어뷰징 필터링 후
+
+  @@index([episodeId, viewedAt])
+  @@index([userId, episodeId])
+  @@index([ipAddress, episodeId])
+  @@map("view_counts")
+}
+
+model Ranking {
+  id            String        @id @default(cuid())
+  rankingType   RankingType
+  period        RankingPeriod
+  genreId       String?       // 장르별 랭킹인 경우
+  rank          Int
+  novelId       String        // Novel 도메인 ID 참조
+  score         Float
+  viewCount     Int           @default(0)
+  likeCount     Int           @default(0)
+  bookmarkCount Int           @default(0)
+  commentCount  Int           @default(0)
+  supportAmount Int           @default(0)
+  previousRank  Int?
+  rankChange    Int?          // 양수: 상승, 음수: 하락
+  calculatedAt  DateTime      @default(now())
+
+  @@unique([rankingType, period, genreId, rank])
+  @@index([rankingType, genreId, period, calculatedAt])
+  @@index([novelId])
+  @@map("rankings")
+}
+
+model SearchKeyword {
+  id           String   @id @default(cuid())
+  keyword      String
+  searchCount  Int      @default(0)
+  period       String   // "hourly", "daily", "weekly"
+  periodStart  DateTime
+  rank         Int?
+  previousRank Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([keyword, period, periodStart])
+  @@index([period, periodStart, rank])
+  @@map("search_keywords")
+}
+
+/// 소설 공유 추적 (FEAT-NOVEL-019)
+model NovelShareLink {
+  id          String   @id @default(cuid())
+  novelId     String   // Novel 도메인 ID 참조
+  sharerId    String?  // 공유한 사용자 (비로그인 시 NULL)
+  platform    String   // "KAKAO", "TWITTER", "FACEBOOK", "URL_COPY"
+  shareCode   String   @unique // 공유 링크 코드 (UTM 추적용)
+  clickCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([novelId])
+  @@index([sharerId])
+  @@index([platform, createdAt])
+  @@map("novel_share_links")
+}

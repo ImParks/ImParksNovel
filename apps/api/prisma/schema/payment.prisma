@@ -1,0 +1,165 @@
+// =============================================================================
+// Payment 도메인 (7개 테이블)
+// =============================================================================
+
+model CoinWallet {
+  id            String            @id @default(cuid())
+  userId        String            @unique // User 도메인 ID 참조
+  balance       Int               @default(0)
+  totalCharged  Int               @default(0)
+  totalUsed     Int               @default(0)
+  totalRefunded Int               @default(0)
+  version       Int               @default(1) // 낙관적 잠금
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  transactions  CoinTransaction[]
+
+  @@map("coin_wallets")
+}
+
+model CoinTransaction {
+  id           String              @id @default(cuid())
+  walletId     String
+  wallet       CoinWallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId       String              // User 도메인 ID 참조
+  type         CoinTransactionType
+  amount       Int                 // 양수: 충전, 음수: 사용
+  balanceAfter Int
+  paymentId    String?
+  purchaseId   String?
+  supportId    String?
+  membershipId String?
+  description  String?
+  createdAt    DateTime            @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("coin_transactions")
+}
+
+model EpisodePurchase {
+  id           String       @id @default(cuid())
+  userId       String       // User 도메인 ID 참조
+  episodeId    String       // Novel.episodes ID 참조
+  novelId      String       // Novel 도메인 ID 참조
+  purchaseType PurchaseType
+  coinsSpent   Int
+  expiresAt    DateTime?    // NULL = 영구 소유
+  upgradedFrom String?      // 대여→소유 업그레이드 시 이전 구매 ID
+  createdAt    DateTime     @default(now())
+
+  @@unique([userId, episodeId, purchaseType])
+  @@index([userId])
+  @@index([episodeId])
+  @@index([expiresAt])
+  @@map("episode_purchases")
+}
+
+model Membership {
+  id            String           @id @default(cuid())
+  userId        String           // User 도메인 ID 참조
+  tier          MembershipTier
+  status        MembershipStatus @default(ACTIVE)
+  startedAt     DateTime
+  expiresAt     DateTime
+  cancelledAt   DateTime?
+  autoRenew     Boolean          @default(true)
+  nextPaymentAt DateTime?
+  lastBonusAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([userId, status])
+  @@index([expiresAt])
+  @@map("memberships")
+}
+
+model Support {
+  id          String   @id @default(cuid())
+  supporterId String   // User 도메인 ID 참조 (후원자)
+  authorId    String   // User 도메인 ID 참조 (작가)
+  novelId     String?  // Novel 도메인 ID 참조
+  coinsAmount Int
+  message     String?
+  isAnonymous Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([supporterId])
+  @@index([authorId])
+  @@index([novelId])
+  @@index([createdAt])
+  @@map("supports")
+}
+
+model Settlement {
+  id                 String           @id @default(cuid())
+  authorId           String           // User 도메인 ID 참조
+  periodStart        DateTime
+  periodEnd          DateTime
+  episodeSalesAmount Int              @default(0)
+  episodeSalesCount  Int              @default(0)
+  supportAmount      Int              @default(0)
+  supportCount       Int              @default(0)
+  platformFee        Int              @default(0)
+  aiFee              Int              @default(0)
+  netAmount          Int
+  status             SettlementStatus @default(PENDING)
+  processedAt        DateTime?
+  paidAt             DateTime?
+  bankName           String?
+  bankAccount        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([authorId, status])
+  @@index([periodStart, periodEnd])
+  @@map("settlements")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String        // User 도메인 ID 참조
+  pgProvider     String        @default("TOSS_PAYMENTS")
+  pgPaymentKey   String?       @unique
+  pgOrderId      String        @unique
+  amount         Int
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  productType    String        // "COIN", "AI_TOKEN", "MEMBERSHIP"
+  productId      String?
+  pgResponse     Json?         // PG사 응답 원본
+  refundedAmount Int?
+  refundedAt     DateTime?
+  refundReason   String?
+  completedAt    DateTime?
+  failedAt       DateTime?
+  failReason     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+// =============================================================================
+// Phase 3: 코인 선물 (FEAT-PAY-014)
+// =============================================================================
+
+model CoinGift {
+  id          String   @id @default(cuid())
+  senderId    String   // User 도메인 ID 참조
+  receiverId  String   // User 도메인 ID 참조
+  amount      Int
+  message     String?
+  isAnonymous Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("coin_gifts")
+}
