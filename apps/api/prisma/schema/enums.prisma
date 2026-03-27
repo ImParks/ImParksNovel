@@ -82,6 +82,8 @@ enum CoinTransactionType {
   MEMBERSHIP
   GIFT_SENT       // Phase 3: 코인 선물 발송
   GIFT_RECEIVED   // Phase 3: 코인 선물 수령
+  AI_USAGE        // Phase 4.4: AI 기능 사용
+  AI_REFUND       // Phase 4.4: AI 기능 환불
 }
 
 enum PurchaseType {
