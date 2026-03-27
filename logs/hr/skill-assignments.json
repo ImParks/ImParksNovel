@@ -1,0 +1,107 @@
+{
+  "assignments": [
+    {
+      "agent": "hr-manager",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "운영 규칙 참조" },
+        { "name": "agent-creator", "type": "required", "purpose": "에이전트/스킬 생성" },
+        { "name": "claude-md-manager", "type": "required", "purpose": "CLAUDE.md 생성 및 관리" }
+      ]
+    },
+    {
+      "agent": "director",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "파이프라인 흐름, 조직 구조, 에이전트 간 소통 규칙 참조" }
+      ]
+    },
+    {
+      "agent": "supervisor",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "승인/반려 기준, 기록 체계 참조" }
+      ]
+    },
+    {
+      "agent": "design-council",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "설계 토론 프로토콜, 파이프라인 흐름 참조" }
+      ]
+    },
+    {
+      "agent": "producer",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "생산 절차, 보안 규칙, 환경변수 관리 참조" }
+      ]
+    },
+    {
+      "agent": "qc-inspector",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "품질검사 절차, 테스트 규칙, 보안 체크리스트 참조" }
+      ]
+    },
+    {
+      "agent": "git-manager",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "Git 관리 규칙, 브랜치 전략, 커밋 메시지 규칙 참조" }
+      ]
+    },
+    {
+      "agent": "reporter",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "사용자 리포트 형식, 기록 체계 참조" }
+      ]
+    },
+    {
+      "agent": "frontend-specialist",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "조직 구조, 기록 체계, 파이프라인 흐름 참조" },
+        { "name": "nextjs-dev", "type": "required", "purpose": "Atomic Design, SSR/SSG/ISR, 서버/클라이언트 컴포넌트 분리, 상태 관리 패턴 참조" }
+      ]
+    },
+    {
+      "agent": "backend-specialist",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "조직 구조, 기록 체계, 파이프라인 흐름 참조" },
+        { "name": "nestjs-dev", "type": "required", "purpose": "DDD+Hexagonal Architecture 레이어 구조, Port 패턴, Saga Orchestration 패턴 참조" }
+      ]
+    },
+    {
+      "agent": "db-specialist",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "조직 구조, 기록 체계, 파이프라인 흐름 참조" },
+        { "name": "postgresql-dev", "type": "required", "purpose": "스키마 설계, 인덱싱 전략, 트랜잭션 처리 참조" },
+        { "name": "redis-dev", "type": "required", "purpose": "캐싱 전략, Sorted Set 랭킹, AI 토큰 잔액 캐싱 참조" },
+        { "name": "elasticsearch-dev", "type": "required", "purpose": "nori 한글 형태소 분석, 소설 검색 인덱스 설계 참조" }
+      ]
+    },
+    {
+      "agent": "infra-specialist",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "조직 구조, 기록 체계, 파이프라인 흐름 참조" },
+        { "name": "aws-infra", "type": "required", "purpose": "ECS Fargate, ALB, S3+CloudFront, RDS, ElastiCache, SQS/SNS 구성 패턴 참조" },
+        { "name": "docker-dev", "type": "required", "purpose": "멀티스테이지 Dockerfile, Docker Compose, ECR 이미지 관리 참조" }
+      ]
+    },
+    {
+      "agent": "payment-specialist",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "조직 구조, 기록 체계, 파이프라인 흐름 참조" },
+        { "name": "toss-payments", "type": "required", "purpose": "토스페이먼츠 API 흐름, 멱등성, 빌링키, 웹훅, 정산 패턴 참조" }
+      ]
+    },
+    {
+      "agent": "ai-specialist",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "조직 구조, 기록 체계, 파이프라인 흐름 참조" },
+        { "name": "ai-integration", "type": "required", "purpose": "OpenAI/Claude API, SSE 스트리밍, 사전충전→차감 과금, 멀티 프로바이더 failover 패턴 참조" }
+      ]
+    },
+    {
+      "agent": "frontend-qa",
+      "skills": [
+        { "name": "agent-manual", "type": "required", "purpose": "조직 구조, 기록 체계, 파이프라인 흐름 참조" },
+        { "name": "nextjs-dev", "type": "required", "purpose": "Next.js 빌드 에러 유형, 서버/클라이언트 컴포넌트 구분, Suspense 패턴 참조" }
+      ]
+    }
+  ],
+  "updated_at": "2026-03-27"
+}

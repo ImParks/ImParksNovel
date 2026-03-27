@@ -1,10 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePaymentStore, type MembershipPlan } from '@/stores';
+import { useAuthStore } from '@/stores/auth.store';
 import { Button } from '@/components/atoms/Button';
 import { Badge } from '@/components/atoms/Badge';
 import { Spinner } from '@/components/atoms/Spinner';
+import { gql } from '@/lib/graphql-client';
+import {
+  MY_MEMBERSHIP_QUERY,
+  PREPARE_MEMBERSHIP_SUBSCRIPTION_MUTATION,
+  CONFIRM_MEMBERSHIP_SUBSCRIPTION_MUTATION,
+  CANCEL_MEMBERSHIP_MUTATION,
+} from '@/lib/graphql-queries';
 
 const MEMBERSHIP_PLANS: MembershipPlan[] = [
   {
@@ -40,66 +49,219 @@ const MEMBERSHIP_PLANS: MembershipPlan[] = [
   },
 ];
 
+// GraphQL 응답 타입
+interface MyMembershipResponse {
+  myMembership: {
+    id: string;
+    tier: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+  } | null;
+}
+
+interface PrepareMembershipResponse {
+  prepareMembershipSubscription: {
+    paymentKey: string;
+    orderId: string;
+    amount: number;
+  };
+}
+
+interface ConfirmMembershipResponse {
+  confirmMembershipSubscription: {
+    id: string;
+    tier: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+  };
+}
+
+interface CancelMembershipResponse {
+  cancelMembership: {
+    id: string;
+    tier: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+  };
+}
+
+// 백엔드 tier를 프론트엔드 plan id로 매핑
+function tierToPlanId(tier: string): string {
+  return tier.toLowerCase();
+}
+
+// 프론트엔드 plan id를 백엔드 tier로 매핑
+function planIdToTier(planId: string): string {
+  return planId.toUpperCase();
+}
+
 export default function MembershipPage() {
-  const { membershipId, membershipExpireDate, setMembership, cancelMembership } =
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  const { membershipId, membershipExpireDate, setMembership, cancelMembership: cancelMembershipStore } =
     usePaymentStore();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('premium');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [apiMembership, setApiMembership] = useState<{
+    tier: string;
+    endDate: string;
+  } | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const currentPlan = membershipId
+  const currentPlan = apiMembership
+    ? MEMBERSHIP_PLANS.find((p) => p.id === tierToPlanId(apiMembership.tier))
+    : membershipId
     ? MEMBERSHIP_PLANS.find((p) => p.id === membershipId)
     : null;
 
   const selectedPlan = MEMBERSHIP_PLANS.find((p) => p.id === selectedPlanId);
+
+  // 인증 체크
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/auth/signin');
+    }
+  }, [isAuthenticated, router]);
+
+  // API 데이터 로드
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadMembershipData = async () => {
+      setIsLoadingData(true);
+
+      try {
+        const membershipData = await gql<MyMembershipResponse>(MY_MEMBERSHIP_QUERY);
+
+        if (membershipData.myMembership && membershipData.myMembership.isActive) {
+          setApiMembership({
+            tier: membershipData.myMembership.tier,
+            endDate: membershipData.myMembership.endDate,
+          });
+
+          // Store도 업데이트
+          setMembership(
+            tierToPlanId(membershipData.myMembership.tier),
+            membershipData.myMembership.endDate
+          );
+        } else {
+          setApiMembership(null);
+        }
+      } catch (error) {
+        console.warn('멤버십 API 실패, store 데이터 사용:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadMembershipData();
+  }, [isAuthenticated, setMembership]);
 
   const handleSubscribe = async () => {
     if (!selectedPlan) return;
 
     setIsProcessing(true);
 
-    // 결제 시뮬레이션
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Step 1: 결제 준비 (주문 정보 생성)
+      const prepareData = await gql<PrepareMembershipResponse>(
+        PREPARE_MEMBERSHIP_SUBSCRIPTION_MUTATION,
+        {
+          tier: planIdToTier(selectedPlan.id),
+        }
+      );
 
-    // 멤버십 설정 (30일 후)
-    const expireDate = new Date();
-    expireDate.setDate(expireDate.getDate() + 30);
+      // Step 2: 실제 환경에서는 여기서 Toss Payments 위젯을 호출해야 함
+      // 테스트 환경에서는 즉시 확인 단계로 진행 (시뮬레이션)
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    setMembership(selectedPlan.id, expireDate.toISOString());
+      // Step 3: 결제 확인
+      const confirmData = await gql<ConfirmMembershipResponse>(
+        CONFIRM_MEMBERSHIP_SUBSCRIPTION_MUTATION,
+        {
+          input: {
+            orderId: prepareData.prepareMembershipSubscription.orderId,
+            paymentKey: prepareData.prepareMembershipSubscription.paymentKey,
+            amount: prepareData.prepareMembershipSubscription.amount,
+            tier: planIdToTier(selectedPlan.id),
+          },
+        }
+      );
 
-    setIsProcessing(false);
-    setShowSuccess(true);
+      if (confirmData.confirmMembershipSubscription.isActive) {
+        // 멤버십 설정 (store 업데이트)
+        setMembership(selectedPlan.id, confirmData.confirmMembershipSubscription.endDate);
 
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
+        // API 상태 업데이트
+        setApiMembership({
+          tier: confirmData.confirmMembershipSubscription.tier,
+          endDate: confirmData.confirmMembershipSubscription.endDate,
+        });
+
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('멤버십 구독 실패:', error);
+      alert('멤버십 구독 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleCancel = async () => {
     setIsProcessing(true);
 
-    // 취소 시뮬레이션
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const cancelData = await gql<CancelMembershipResponse>(CANCEL_MEMBERSHIP_MUTATION);
 
-    cancelMembership();
-    setShowCancelConfirm(false);
-    setIsProcessing(false);
+      // Store 업데이트
+      cancelMembershipStore();
+
+      // API 상태 업데이트
+      if (!cancelData.cancelMembership.isActive) {
+        setApiMembership(null);
+      }
+
+      setShowCancelConfirm(false);
+    } catch (error) {
+      console.error('멤버십 취소 실패:', error);
+      alert('멤버십 취소 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
+
+  const displayExpireDate = apiMembership?.endDate || membershipExpireDate;
+
+  if (!isAuthenticated) {
+    return null; // 리다이렉트 중
+  }
 
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* 현재 멤버십 상태 */}
         <div className="mb-12 p-6 rounded-lg bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-950 dark:to-primary-900 border border-primary-200 dark:border-primary-800">
-          {currentPlan ? (
+          {isLoadingData ? (
+            <div className="flex items-center justify-center py-4">
+              <Spinner size="lg" />
+            </div>
+          ) : currentPlan ? (
             <div>
               <p className="text-sm text-primary-600 dark:text-primary-400 mb-2">현재 구독 중</p>
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 {currentPlan.name} 멤버십
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                만료일: {membershipExpireDate && new Date(membershipExpireDate).toLocaleDateString()}
+                만료일: {displayExpireDate && new Date(displayExpireDate).toLocaleDateString()}
               </p>
             </div>
           ) : (

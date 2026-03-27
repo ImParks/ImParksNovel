@@ -174,10 +174,14 @@ export default function EpisodePage() {
   // API 상태 관리
   const [loading, setLoading] = useState(true);
   const [episode, setEpisode] = useState<any>(null);
-  const [, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
   const [novelTitle, setNovelTitle] = useState<string>('');
   const [prevEpisodeId, setPrevEpisodeId] = useState<string | null>(null);
   const [nextEpisodeId, setNextEpisodeId] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
 
   // Fallback mock 데이터
   const mockEpisode = MOCK_EPISODES[episodeId as keyof typeof MOCK_EPISODES];
@@ -235,10 +239,69 @@ export default function EpisodePage() {
 
         setComments(commentsResult.comments.edges.map(edge => edge.node));
 
-        // TODO: Novel Title, prev/next episode ID를 API에서 가져오도록 개선
-        setNovelTitle('소설 제목'); // 임시
-        setPrevEpisodeId(currentEpisodeNumber > 1 ? `ep${currentEpisodeNumber - 1}` : null);
-        setNextEpisodeId(`ep${currentEpisodeNumber + 1}`);
+        // 3. Check episode ownership for paid episodes
+        if (!episodeData.isFree) {
+          try {
+            const ownershipResult = await gql<{ episodeOwnership: { id: string } | null }>(`
+              query EpisodeOwnership($episodeId: ID!) {
+                episodeOwnership(episodeId: $episodeId) {
+                  id
+                }
+              }
+            `, { episodeId });
+            setIsPurchased(!!ownershipResult.episodeOwnership);
+          } catch (err) {
+            setIsPurchased(false);
+          }
+        } else {
+          setIsPurchased(true);
+        }
+
+        // 4. Get novel title from novelId
+        try {
+          const novelResult = await gql<{ novel: { title: string } }>(`
+            query Novel($id: ID!) {
+              novel(id: $id) {
+                title
+              }
+            }
+          `, { id: episodeData.novelId });
+          setNovelTitle(novelResult.novel.title);
+        } catch (err) {
+          setNovelTitle('소설 제목');
+        }
+
+        // 5. Get prev/next episodes
+        try {
+          const allEpisodesResult = await gql<{
+            episodes: {
+              edges: Array<{ node: { id: string; episodeNumber: number } }>
+            }
+          }>(`
+            query Episodes($novelId: ID!, $first: Int) {
+              episodes(novelId: $novelId, first: $first) {
+                edges {
+                  node {
+                    id
+                    episodeNumber
+                  }
+                }
+              }
+            }
+          `, { novelId: episodeData.novelId, first: 200 });
+
+          const allEpisodes = allEpisodesResult.episodes.edges.map(edge => edge.node);
+          const currentIndex = allEpisodes.findIndex(ep => ep.id === episodeId);
+
+          if (currentIndex > 0) {
+            setPrevEpisodeId(allEpisodes[currentIndex - 1].id);
+          }
+          if (currentIndex < allEpisodes.length - 1) {
+            setNextEpisodeId(allEpisodes[currentIndex + 1].id);
+          }
+        } catch (err) {
+          console.error('Failed to get prev/next episodes:', err);
+        }
 
         setLoading(false);
       } catch (error) {
@@ -278,8 +341,86 @@ export default function EpisodePage() {
     );
   }
 
+  const handleCreateComment = async () => {
+    if (!newComment.trim()) return;
+
+    setSubmittingComment(true);
+    try {
+      const result = await gql<{ createComment: { id: string; content: string; createdAt: string } }>(`
+        mutation CreateComment($input: CreateCommentInput!) {
+          createComment(input: $input) {
+            id
+            content
+            createdAt
+          }
+        }
+      `, {
+        input: {
+          episodeId,
+          content: newComment.trim(),
+          isSpoiler: false,
+        },
+      });
+
+      setComments(prev => [result.createComment, ...prev]);
+      setNewComment('');
+      alert('댓글이 작성되었습니다.');
+    } catch (error) {
+      console.error('Failed to create comment:', error);
+      alert('댓글 작성에 실패했습니다. 로그인이 필요합니다.');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handlePurchaseEpisode = async () => {
+    setPurchasing(true);
+    try {
+      await gql<{ purchaseEpisode: { id: string } }>(`
+        mutation PurchaseEpisode($episodeId: ID!) {
+          purchaseEpisode(episodeId: $episodeId) {
+            id
+          }
+        }
+      `, { episodeId });
+
+      setIsPurchased(true);
+      alert('회차를 구매했습니다.');
+      // Refetch episode data to show content
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to purchase episode:', error);
+      alert('회차 구매에 실패했습니다. 코인이 부족하거나 로그인이 필요합니다.');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const handleRentEpisode = async (days: 3 | 7 | 14) => {
+    setPurchasing(true);
+    try {
+      await gql<{ rentEpisode: { id: string } }>(`
+        mutation RentEpisode($episodeId: ID!, $days: Int!) {
+          rentEpisode(episodeId: $episodeId, days: $days) {
+            id
+          }
+        }
+      `, { episodeId, days });
+
+      setIsPurchased(true);
+      alert(`회차를 ${days}일 대여했습니다.`);
+      // Refetch episode data to show content
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to rent episode:', error);
+      alert('회차 대여에 실패했습니다. 코인이 부족하거나 로그인이 필요합니다.');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
   const isFree = episode.isFree;
-  const canRead = isFree; // 실제로는 유료 회차 구매 여부 확인
+  const canRead = isFree || isPurchased;
 
   return (
     <div className={`transition-colors duration-300 ${getThemeStyles(theme)}`}>
@@ -377,25 +518,39 @@ export default function EpisodePage() {
 
               {/* 구매 옵션 */}
               <div className="space-y-4 max-w-sm mx-auto">
-                <Button size="lg" className="w-full">
-                  {episode.price}코인으로 구매
+                <Button
+                  size="lg"
+                  className="w-full"
+                  onClick={handlePurchaseEpisode}
+                  disabled={purchasing}
+                >
+                  {purchasing ? '구매 중...' : `${episode.price}코인으로 구매`}
                 </Button>
 
-                <div className="relative group">
-                  <button className="text-sm text-primary-500 hover:text-primary-600 font-medium">
-                    대여 (3일) ▼
-                  </button>
-
-                  {/* 드롭다운 (호버시) */}
-                  <div className="absolute hidden group-hover:block right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">
-                      대여 (3일) - {Math.floor(episode.price * 0.5)}코인
-                    </button>
-                  </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center">또는</p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleRentEpisode(3)}
+                    disabled={purchasing}
+                  >
+                    대여 (3일) - {Math.floor(episode.price * 0.5)}코인
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleRentEpisode(7)}
+                    disabled={purchasing}
+                  >
+                    대여 (7일) - {Math.floor(episode.price * 0.7)}코인
+                  </Button>
                 </div>
 
                 <div className="text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <p className="mb-2">보유 코인: 0</p>
+                  <p className="mb-2">코인이 부족하신가요?</p>
                   <Button
                     variant="secondary"
                     size="sm"
@@ -453,6 +608,56 @@ export default function EpisodePage() {
           </button>
         </div>
       </div>
+
+      {/* 댓글 섹션 (canRead일 때만 표시) */}
+      {canRead && (
+        <div className="container mx-auto px-4 py-8 max-w-3xl bg-white dark:bg-gray-900">
+          <h3 className="text-xl font-bold mb-4">댓글 {comments.length}</h3>
+
+          {/* 댓글 작성 */}
+          <div className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="댓글을 작성하세요..."
+              className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg resize-none"
+              rows={3}
+            />
+            <div className="flex justify-end mt-2">
+              <Button
+                size="sm"
+                onClick={handleCreateComment}
+                disabled={submittingComment || !newComment.trim()}
+              >
+                {submittingComment ? '작성 중...' : '댓글 작성'}
+              </Button>
+            </div>
+          </div>
+
+          {/* 댓글 목록 */}
+          <div className="space-y-4">
+            {comments.length === 0 ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
+              </p>
+            ) : (
+              comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                >
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                    {comment.content}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(comment.createdAt).toLocaleDateString('ko-KR')}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -32,6 +32,8 @@ model Novel {
   serializationSchedule     NovelSerializationSchedule?
   serializationMarks        NovelSerializationMark[]
   novelSettings             NovelSetting[]
+  novelSummary              NovelSummary?
+  episodePlans              EpisodePlan[]
 
   @@index([authorId])
   @@index([genreId, status, deletedAt])

@@ -14,8 +14,8 @@ import {
   NoticeObject,
   NoticeConnection,
   UserBadgeObject,
-  ReportObject,
-  ReportConnection,
+  AdminReportObject,
+  AdminReportConnection,
 } from '../application/dto/admin.object';
 import {
   ContentActionInput,
@@ -47,7 +47,7 @@ export class AdminResolver {
   // Report Queries & Mutations
   // ──────────────────────────────────────────────
 
-  @Query(() => ReportConnection)
+  @Query(() => AdminReportConnection)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async reports(
@@ -55,18 +55,18 @@ export class AdminResolver {
     @Args('targetType', { type: () => String, nullable: true }) targetType?: ReportTargetType,
     @Args('first', { type: () => Int, nullable: true, defaultValue: 20 }) first?: number,
     @Args('after', { nullable: true }) after?: string,
-  ): Promise<ReportConnection> {
+  ): Promise<AdminReportConnection> {
     return this.adminService.getReports(status, targetType, first, after);
   }
 
-  @Mutation(() => ReportObject)
+  @Mutation(() => AdminReportObject)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async resolveReport(
     @CurrentUser() user: JwtPayload,
     @Args('reportId', { type: () => ID }) reportId: string,
     @Args('input') input: ReportResolutionInput,
-  ): Promise<ReportObject> {
+  ): Promise<AdminReportObject> {
     return this.adminService.resolveReport(user.userId, reportId, input);
   }
 

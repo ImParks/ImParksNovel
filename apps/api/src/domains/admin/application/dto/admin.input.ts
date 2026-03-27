@@ -74,7 +74,7 @@ export class UserActionInput {
   @MaxLength(500)
   reason: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   duration?: string; // "1d", "7d", "30d"
@@ -90,7 +90,7 @@ export class ReportResolutionInput {
   @IsString()
   status: string; // "REVIEWED", "RESOLVED", "DISMISSED"
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(500)
@@ -117,7 +117,7 @@ export class CreateNoticeInput {
   @Field(() => NoticeCategoryEnum)
   category: NoticeCategoryEnum;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   @IsBoolean()
   isPinned?: boolean;
@@ -130,14 +130,14 @@ export class CreateNoticeInput {
 
 @InputType()
 export class UpdateNoticeInput {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(200)
   title?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(1)
@@ -147,7 +147,7 @@ export class UpdateNoticeInput {
   @IsOptional()
   category?: NoticeCategoryEnum;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   @IsBoolean()
   isPinned?: boolean;
@@ -175,7 +175,7 @@ export class AwardBadgeInput {
   @Field(() => BadgeType)
   badgeType: BadgeType;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(100)
@@ -187,7 +187,7 @@ export class AwardBadgeInput {
   @MaxLength(500)
   reason: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsDateString()
   expiresAt?: string;

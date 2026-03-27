@@ -12,7 +12,7 @@ export class ContentPageInfo {
   @Field()
   hasNextPage: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   endCursor?: string;
 }
 
@@ -49,7 +49,7 @@ export class CommentObject {
   @Field()
   isEdited: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   editedAt?: Date;
 
   @Field(() => Int)
@@ -64,7 +64,7 @@ export class CommentObject {
   @Field()
   updatedAt: Date;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   deletedAt?: Date;
 
   @Field(() => [CommentObject])
@@ -288,7 +288,7 @@ export class ReportObject {
   @Field()
   reason: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   description?: string;
 
   @Field(() => ReportStatus)

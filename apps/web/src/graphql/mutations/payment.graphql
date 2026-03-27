@@ -1,0 +1,51 @@
+# 결제 관련 뮤테이션
+
+mutation PurchaseCoin($input: PurchaseCoinInput!) {
+  purchaseCoin(input: $input) {
+    id
+    orderId
+    paymentUrl
+    status
+    createdAt
+  }
+}
+
+mutation ConfirmPurchase($orderId: String!) {
+  confirmPurchase(orderId: $orderId) {
+    id
+    wallet {
+      coins
+      totalSpent
+    }
+    payment {
+      status
+      completedAt
+    }
+  }
+}
+
+mutation PurchaseMembership($input: PurchaseMembershipInput!) {
+  purchaseMembership(input: $input) {
+    id
+    orderId
+    paymentUrl
+    status
+    createdAt
+  }
+}
+
+mutation CancelMembership {
+  cancelMembership {
+    success
+    membership {
+      endDate
+      autoRenewal
+    }
+  }
+}
+
+mutation UpdateMembershipAutoRenewal($autoRenewal: Boolean!) {
+  updateMembershipAutoRenewal(autoRenewal: $autoRenewal) {
+    autoRenewal
+  }
+}

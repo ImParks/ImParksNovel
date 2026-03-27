@@ -9,8 +9,8 @@ import {
   NoticeObject,
   NoticeConnection,
   UserBadgeObject,
-  ReportObject,
-  ReportConnection,
+  AdminReportObject,
+  AdminReportConnection,
 } from './dto/admin.object';
 import {
   ContentActionInput,
@@ -77,7 +77,7 @@ export class AdminService {
     targetType?: ReportTargetType,
     first?: number,
     after?: string,
-  ): Promise<ReportConnection> {
+  ): Promise<AdminReportConnection> {
     const connection = await this.adminRepository.findReportsWithPagination(status, targetType, {
       first: first ?? 20,
       after,
@@ -97,7 +97,7 @@ export class AdminService {
     adminId: string,
     reportId: string,
     input: ReportResolutionInput,
-  ): Promise<ReportObject> {
+  ): Promise<AdminReportObject> {
     const report = await this.adminRepository.findReportById(reportId);
     if (!report) throw new NotFoundException(`Report ${reportId} not found`);
 
@@ -418,7 +418,7 @@ export class AdminService {
     };
   }
 
-  private mapReportToObject(report: any): ReportObject {
+  private mapReportToObject(report: any): AdminReportObject {
     return {
       id: report.id,
       targetType: report.targetType,

@@ -62,20 +62,58 @@ model AIGenerationLog {
 }
 
 model NovelSetting {
-  id                String  @id @default(cuid())
+  id                String    @id @default(cuid())
   novelId           String
-  novel             Novel   @relation(fields: [novelId], references: [id], onDelete: Cascade)
-  category          String  // "worldview", "character", "plot", "custom"
+  novel             Novel     @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  category          String    // "worldview", "character", "plot", "custom"
   title             String
   content           String
-  isAIGenerated     Boolean @default(false)
+  structuredData    Json?     // 카테고리별 구조화 데이터
+  linkedEpisodes    Int[]     @default([]) // 관련 회차 번호들
+  linkedCharacters  String[]  @default([]) // 관련 캐릭터 설정 ID들
+  status            String    @default("ACTIVE") // "ACTIVE", "RESOLVED", "ARCHIVED"
+  isAIGenerated     Boolean   @default(false)
   aiGenerationLogId String?
-  sortOrder         Int     @default(0)
+  sortOrder         Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([novelId, category])
+  @@index([novelId, status])
+  @@map("novel_settings")
+}
+
+model NovelSummary {
+  id              String   @id @default(cuid())
+  novelId         String   @unique
+  novel           Novel    @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  overallPlot     String   // 전체 스토리 요약
+  recentEvents    String   // 최근 5화 주요 사건
+  activeThreads   Json     // 진행 중인 스토리 라인
+  characterStatus Json     // 캐릭터별 현재 상태
+  lastEpisode     Int      @default(0)
+  version         Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("novel_summaries")
+}
+
+model EpisodePlan {
+  id                String   @id @default(cuid())
+  novelId           String
+  novel             Novel    @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  userId            String   // User 도메인 ID 참조
+  sourceText        String   // 입력 줄거리
+  totalEpisodes     Int
+  episodes          Json     // EpisodePlanItem[]
+  aiGenerationLogId String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  @@index([novelId, category])
-  @@map("novel_settings")
+  @@index([novelId])
+  @@index([userId])
+  @@map("episode_plans")
 }
 
 model EpisodeSummary {

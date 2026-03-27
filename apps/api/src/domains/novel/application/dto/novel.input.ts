@@ -40,7 +40,7 @@ export class CreateNovelInput {
   @MaxLength(2000, { message: '시놉시스는 최대 2000자까지 가능합니다.' })
   synopsis: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsUrl({}, { message: '유효한 URL 형식이어야 합니다.' })
   coverImageUrl?: string;
@@ -61,26 +61,26 @@ export class CreateNovelInput {
 
 @InputType()
 export class UpdateNovelInput {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(100)
   title?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(2000)
   synopsis?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsUrl({}, { message: '유효한 URL 형식이어야 합니다.' })
   coverImageUrl?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   genreId?: string;
@@ -91,7 +91,7 @@ export class UpdateNovelInput {
   @IsString({ each: true })
   tags?: string[];
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   @IsBoolean()
   isAdultOnly?: boolean;
@@ -133,21 +133,21 @@ export class CreateEpisodeInput {
 
 @InputType()
 export class UpdateEpisodeInput {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(200)
   title?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(500, { message: '본문은 최소 500자 이상이어야 합니다.' })
   @MaxLength(50000, { message: '본문은 최대 50,000자까지 가능합니다.' })
   content?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   @IsBoolean()
   isFree?: boolean;
@@ -181,7 +181,7 @@ export class SerializationScheduleInput {
   @Min(1)
   serialCount?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   preferredTime?: string;
@@ -197,18 +197,18 @@ export class SaveDraftInput {
   @IsString()
   novelId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   episodeId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(200)
   title?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   content?: string;

@@ -1,5 +1,7 @@
 import { ObjectType, Field, ID, Int, registerEnumType } from '@nestjs/graphql';
 import { NotificationType } from '@prisma/client';
+import { PageInfo } from '../../../novel/application/dto/novel.object';
+export { PageInfo };
 
 registerEnumType(NotificationType, { name: 'NotificationType' });
 
@@ -24,7 +26,7 @@ export class NotificationObject {
   @Field()
   message: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   relatedType?: string;
 
   @Field(() => ID, { nullable: true })
@@ -36,7 +38,7 @@ export class NotificationObject {
   @Field()
   isRead: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   readAt?: Date;
 
   @Field()
@@ -52,14 +54,6 @@ export class NotificationEdge {
   node: NotificationObject;
 }
 
-@ObjectType()
-export class PageInfo {
-  @Field()
-  hasNextPage: boolean;
-
-  @Field({ nullable: true })
-  endCursor?: string;
-}
 
 @ObjectType()
 export class NotificationConnection {
@@ -91,7 +85,7 @@ export class GenreObject {
   @Field()
   slug: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   description?: string;
 
   @Field()

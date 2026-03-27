@@ -1,19 +1,7 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { AdminActionType, BadgeType } from '@prisma/client';
 import { NoticeCategoryEnum } from './admin.input';
-
-// ──────────────────────────────────────────────
-// Page Info (재사용)
-// ──────────────────────────────────────────────
-
-@ObjectType()
-export class PageInfo {
-  @Field()
-  hasNextPage: boolean;
-
-  @Field({ nullable: true })
-  endCursor?: string;
-}
+import { PageInfo } from '../../../novel/application/dto/novel.object';
 
 // ──────────────────────────────────────────────
 // Dashboard
@@ -83,10 +71,10 @@ export class UserPenaltyObject {
   @Field()
   reason: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   duration?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   expiresAt?: Date;
 
   @Field()
@@ -117,7 +105,7 @@ export class NoticeObject {
   @Field()
   isPublished: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   publishedAt?: Date;
 
   @Field()
@@ -163,13 +151,13 @@ export class UserBadgeObject {
   @Field(() => BadgeType)
   badgeType: BadgeType;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   customName?: string;
 
   @Field()
   reason: string;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   expiresAt?: Date;
 
   @Field()
@@ -183,8 +171,8 @@ export class UserBadgeObject {
 // Report (Content 도메인과 연동)
 // ──────────────────────────────────────────────
 
-@ObjectType()
-export class ReportObject {
+@ObjectType('AdminReport')
+export class AdminReportObject {
   @Field(() => ID)
   id: string;
 
@@ -203,26 +191,26 @@ export class ReportObject {
   @Field()
   reporterId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   adminNote?: string;
 
   @Field()
   createdAt: Date;
 }
 
-@ObjectType()
-export class ReportEdge {
-  @Field(() => ReportObject)
-  node: ReportObject;
+@ObjectType('AdminReportEdge')
+export class AdminReportEdge {
+  @Field(() => AdminReportObject)
+  node: AdminReportObject;
 
   @Field()
   cursor: string;
 }
 
-@ObjectType()
-export class ReportConnection {
-  @Field(() => [ReportEdge])
-  edges: ReportEdge[];
+@ObjectType('AdminReportConnection')
+export class AdminReportConnection {
+  @Field(() => [AdminReportEdge])
+  edges: AdminReportEdge[];
 
   @Field(() => PageInfo)
   pageInfo: PageInfo;

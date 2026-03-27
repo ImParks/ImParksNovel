@@ -4,15 +4,20 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
+  Inject,
+  Optional,
 } from '@nestjs/common';
 import { GqlArgumentsHost } from '@nestjs/graphql';
 import { GraphQLError } from 'graphql';
 import { Prisma } from '@prisma/client';
+import { LoggerService } from '../logger/logger.service';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(GlobalExceptionFilter.name);
+  constructor(
+    @Optional()
+    private readonly loggerService?: LoggerService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const gqlHost = GqlArgumentsHost.create(host);
@@ -25,14 +30,39 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // REST fallback (health checks, etc.)
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const { status, message, code } = this.extractDetails(exception);
-    this.logger.error(`[HTTP] ${status} ${code}: ${message}`);
+    const request = ctx.getRequest();
+    const { status, message, code, stack } = this.extractDetails(exception);
+
+    this.loggerService?.logWithMetadata(
+      `[${code}] ${message}`,
+      'GlobalExceptionFilter',
+      {
+        type: 'REST',
+        status,
+        code,
+        path: request.path,
+        method: request.method,
+        ip: request.ip,
+      },
+      'error',
+    );
+
     response.status(status).json({ statusCode: status, error: code, message });
   }
 
   private toGraphQLError(exception: unknown): GraphQLError {
-    const { status, message, code } = this.extractDetails(exception);
-    this.logger.error(`[GQL] ${status} ${code}: ${message}`);
+    const { status, message, code, stack } = this.extractDetails(exception);
+
+    this.loggerService?.logWithMetadata(
+      `[${code}] ${message}`,
+      'GlobalExceptionFilter',
+      {
+        type: 'GraphQL',
+        status,
+        code,
+      },
+      'error',
+    );
 
     return new GraphQLError(message, {
       extensions: {
@@ -46,6 +76,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     status: number;
     message: string;
     code: string;
+    stack?: string;
   } {
     if (exception instanceof HttpException) {
       const response = exception.getResponse();
@@ -79,7 +110,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     const _message =
       exception instanceof Error ? exception.message : 'Internal server error';
-    this.logger.error('Unexpected error', exception instanceof Error ? exception.stack : String(exception));
+    this.loggerService?.error('Unexpected error', exception instanceof Error ? exception.stack : '');
 
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -115,7 +146,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           code: 'BAD_REQUEST',
         };
       default:
-        this.logger.error(`Unhandled Prisma error ${e.code}`, e.message);
+        this.loggerService?.logWithMetadata(
+          `Unhandled Prisma error ${e.code}`,
+          'GlobalExceptionFilter',
+          { prismaCode: e.code, message: e.message },
+          'error',
+        );
         return {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Database error',

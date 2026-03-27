@@ -30,6 +30,9 @@ apps/api/prisma/migrations/**/migration_lock.toml
 
 # Test
 coverage/
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Debug
 npm-debug.log*
@@ -39,8 +42,11 @@ pnpm-debug.log*
 docker-data/
 
 # Claude Code (local agent config/memory)
-.claude/
+.claude/agent-memory/
 .mcp.json
 
-# Logs
-logs/
+# Logs (except HR records)
+logs/pipelines/
+logs/design-council/
+logs/quality/
+logs/reports/

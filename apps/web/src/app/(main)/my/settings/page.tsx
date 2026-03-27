@@ -144,16 +144,45 @@ export default function SettingsPage() {
     }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       alert('비밀번호가 일치하지 않습니다');
       return;
     }
-    console.log('비밀번호 변경:', { currentPassword, newPassword });
-    setShowPasswordForm(false);
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+
+    if (newPassword.length < 8) {
+      alert('비밀번호는 최소 8자 이상이어야 합니다');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 백엔드에서 비밀번호 변경은 토큰 기반 재설정만 제공하므로,
+      // 프론트엔드에서 현재 비밀번호 확인 후 재설정 요청을 해야 함
+      // 여기서는 간단히 requestPasswordReset + resetPassword 플로우를 사용
+
+      // Step 1: 이메일로 비밀번호 재설정 요청
+      await gql<{ requestPasswordReset: boolean }>(
+        `mutation RequestPasswordReset($email: String!) {
+          requestPasswordReset(email: $email)
+        }`,
+        { email: user?.email }
+      );
+
+      alert('비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.');
+      setShowPasswordForm(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      console.error('Failed to change password:', err);
+      setError('비밀번호 변경에 실패했습니다.');
+      alert('비밀번호 변경에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChangeEmail = () => {
@@ -241,9 +270,14 @@ export default function SettingsPage() {
                     size="lg"
                     fallback={profile.nickname.slice(0, 2).toUpperCase()}
                   />
-                  <Button variant="secondary" size="sm">
-                    이미지 업로드
-                  </Button>
+                  <div>
+                    <Button variant="secondary" size="sm" disabled>
+                      이미지 업로드
+                    </Button>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      (S3 연동 후 사용 가능)
+                    </p>
+                  </div>
                 </div>
               </div>
 

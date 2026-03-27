@@ -11,11 +11,13 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { JwtPayload } from '../../../common/types/context';
 import { AiService } from '../application/ai.service';
-import { CreateSettingNoteInput, UpdateSettingNoteInput } from '../application/dto/ai.input';
+import { EpisodePlanService } from '../application/episode-plan.service';
+import { CreateSettingNoteInput, UpdateSettingNoteInput, SuggestEpisodeDivisionInput } from '../application/dto/ai.input';
 import {
   AITokenBalanceObject,
   AITokenTransactionConnection,
   SettingNoteObject,
+  EpisodePlanObject,
 } from '../application/dto/ai.object';
 import { AITokenTransactionType } from '@prisma/client';
 
@@ -25,7 +27,10 @@ import { AITokenTransactionType } from '@prisma/client';
 
 @Resolver()
 export class AiResolver {
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly episodePlanService: EpisodePlanService,
+  ) {}
 
   // ──────────────────────────────────────────────
   // Token Queries
@@ -134,5 +139,52 @@ export class AiResolver {
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
     return this.aiService.deleteSettingNote(user.userId, id);
+  }
+
+  // ──────────────────────────────────────────────
+  // Episode Plan Queries
+  // ──────────────────────────────────────────────
+
+  /**
+   * Query: episodePlans
+   * Get all episode division plans for a novel
+   */
+  @Query(() => [EpisodePlanObject])
+  @UseGuards(JwtAuthGuard)
+  async episodePlans(
+    @CurrentUser() user: JwtPayload,
+    @Args('novelId', { type: () => ID }) novelId: string,
+  ): Promise<any[]> {
+    return this.episodePlanService.getPlans(user.userId, novelId);
+  }
+
+  /**
+   * Query: episodePlan
+   * Get a single episode division plan by ID
+   */
+  @Query(() => EpisodePlanObject, { nullable: true })
+  @UseGuards(JwtAuthGuard)
+  async episodePlan(
+    @CurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<any | null> {
+    return this.episodePlanService.getPlan(user.userId, id);
+  }
+
+  // ──────────────────────────────────────────────
+  // Episode Plan Mutations
+  // ──────────────────────────────────────────────
+
+  /**
+   * Mutation: suggestEpisodeDivision
+   * Generate episode division suggestions from a plot summary (5 tokens)
+   */
+  @Mutation(() => EpisodePlanObject)
+  @UseGuards(JwtAuthGuard)
+  async suggestEpisodeDivision(
+    @CurrentUser() user: JwtPayload,
+    @Args('input') input: SuggestEpisodeDivisionInput,
+  ): Promise<any> {
+    return this.episodePlanService.suggestEpisodeDivision(user.userId, input);
   }
 }

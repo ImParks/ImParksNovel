@@ -47,7 +47,7 @@ export class ConfirmSubscriptionInput {
   @Min(0)
   amount: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   billingKey?: string;
@@ -68,13 +68,13 @@ export class SponsorInput {
   @Min(1)
   coinAmount: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   message?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   @IsBoolean()
   isAnonymous?: boolean;

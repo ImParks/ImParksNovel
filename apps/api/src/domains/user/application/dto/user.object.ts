@@ -15,10 +15,10 @@ export class UserObject {
   @Field()
   nickname: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   profileImageUrl?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   bio?: string;
 
   @Field(() => UserRole)
@@ -30,13 +30,13 @@ export class UserObject {
   @Field()
   isAdultVerified: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   emailVerifiedAt?: Date;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   lastLoginAt?: Date;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   nicknameChangedAt?: Date;
 
   @Field()
@@ -57,19 +57,19 @@ export class AuthorProfileObject {
   @Field()
   authorName: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   authorBio?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   bankName?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   bankAccount?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   accountHolder?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   taxId?: string;
 }
 

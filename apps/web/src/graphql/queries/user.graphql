@@ -1,0 +1,37 @@
+# 사용자 정보 및 인증 관련 쿼리
+
+query GetMe {
+  me {
+    id
+    email
+    nickname
+    avatarUrl
+    role
+    createdAt
+    updatedAt
+  }
+}
+
+query GetUserProfile($userId: ID!) {
+  userProfile(userId: $userId) {
+    id
+    email
+    nickname
+    avatarUrl
+    role
+    bio
+    website
+    followerCount
+    followingCount
+    novelCount
+    createdAt
+  }
+}
+
+query CheckEmailExists($email: String!) {
+  checkEmailExists(email: $email)
+}
+
+query CheckNicknameExists($nickname: String!) {
+  checkNicknameExists(nickname: $nickname)
+}

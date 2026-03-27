@@ -1,6 +1,6 @@
 # Base stage
 FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN apk add --no-cache openssl && corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 
 # Dependencies stage
@@ -12,16 +12,20 @@ RUN pnpm install --frozen-lockfile
 
 # Development stage
 FROM base AS development
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 WORKDIR /app/apps/api
 EXPOSE 4000
 CMD ["pnpm", "dev"]
 
 # Builder stage
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 WORKDIR /app
 RUN pnpm --filter api prisma:generate
 RUN pnpm --filter api build
