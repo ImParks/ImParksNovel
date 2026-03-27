@@ -119,3 +119,52 @@ export class SettingNoteConnection {
   @Field(() => Int)
   totalCount: number;
 }
+
+// ──────────────────────────────────────────────
+// Episode Plan (회차 분할)
+// ──────────────────────────────────────────────
+
+@ObjectType()
+export class EpisodePlanItemObject {
+  @Field(() => Int)
+  number: number;
+
+  @Field()
+  title: string;
+
+  @Field()
+  synopsis: string;
+
+  @Field(() => [String])
+  mainCharacters: string[];
+
+  @Field(() => [String])
+  keyEvents: string[];
+
+  @Field()
+  mood: string;
+
+  @Field({ nullable: true })
+  cliffhanger?: string;
+
+  @Field(() => Int)
+  estimatedLength: number;
+}
+
+@ObjectType()
+export class EpisodePlanObject {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => ID)
+  novelId: string;
+
+  @Field(() => Int)
+  totalEpisodes: number;
+
+  @Field(() => [EpisodePlanItemObject])
+  episodes: EpisodePlanItemObject[];
+
+  @Field()
+  createdAt: Date;
+}
