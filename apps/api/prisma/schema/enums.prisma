@@ -61,6 +61,7 @@ enum AIFeatureType {
   ANALYZE_STYLE
   DETECT_ERROR
   SUMMARIZE
+  SUGGEST_EPISODE_DIVISION
 }
 
 enum AITokenTransactionType {

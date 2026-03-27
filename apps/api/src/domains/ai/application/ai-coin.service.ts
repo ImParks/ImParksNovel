@@ -246,4 +246,99 @@ export class AiCoinService {
       where: { id: transactionId },
     });
   }
+
+  // ──────────────────────────────────────────────
+  // AI Token Management (AITokenWallet)
+  // ──────────────────────────────────────────────
+
+  /**
+   * AI 토큰 잔액 확인
+   * @param userId 사용자 ID
+   * @param requiredAmount 필요한 토큰 양
+   * @throws BadRequestException 토큰 부족
+   */
+  async validateTokenBalance(userId: string, requiredAmount: number): Promise<void> {
+    // AI Token Wallet 조회 또는 생성
+    let wallet = await this.prisma.aITokenWallet.findUnique({
+      where: { userId },
+    });
+
+    if (!wallet) {
+      wallet = await this.prisma.aITokenWallet.create({
+        data: {
+          userId,
+          balance: 0,
+          totalCharged: 0,
+          totalUsed: 0,
+          version: 1,
+        },
+      });
+    }
+
+    if (wallet.balance < requiredAmount) {
+      throw new BadRequestException(
+        `AI 토큰이 부족합니다. 필요: ${requiredAmount}, 보유: ${wallet.balance}`,
+      );
+    }
+  }
+
+  /**
+   * AI 토큰 차감
+   * @param userId 사용자 ID
+   * @param amount 차감할 토큰 양
+   * @throws BadRequestException 토큰 부족
+   * @throws InternalServerErrorException 트랜잭션 실패
+   */
+  async deductTokens(userId: string, amount: number): Promise<void> {
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        // 1. AI Token Wallet 조회 또는 생성
+        let wallet = await tx.aITokenWallet.findUnique({ where: { userId } });
+
+        if (!wallet) {
+          wallet = await tx.aITokenWallet.create({
+            data: {
+              userId,
+              balance: 0,
+              totalCharged: 0,
+              totalUsed: 0,
+              version: 1,
+            },
+          });
+        }
+
+        // 2. 잔액 확인
+        if (wallet.balance < amount) {
+          throw new BadRequestException(
+            `AI 토큰이 부족합니다. 필요: ${amount}, 보유: ${wallet.balance}`,
+          );
+        }
+
+        // 3. 지갑 업데이트 (낙관적 잠금)
+        await tx.aITokenWallet.update({
+          where: { id: wallet.id, version: wallet.version },
+          data: {
+            balance: { decrement: amount },
+            totalUsed: { increment: amount },
+            version: { increment: 1 },
+          },
+        });
+      });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      if (
+        error instanceof Error &&
+        error.message.includes('Unique constraint failed')
+      ) {
+        throw new InternalServerErrorException('AI 토큰 처리 중 동시성 문제가 발생했습니다. 다시 시도해주세요.');
+      }
+
+      throw new InternalServerErrorException(
+        `AI 토큰 차감 중 오류가 발생했습니다: ${error}`,
+      );
+    }
+  }
 }

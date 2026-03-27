@@ -1,4 +1,4 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, Int, ID } from '@nestjs/graphql';
 import { IsString, IsOptional, IsInt, Min, Max, MaxLength, IsEnum, IsUUID, IsArray } from 'class-validator';
 
 // ──────────────────────────────────────────────
@@ -133,4 +133,34 @@ export class UpdateSettingNoteInput {
   @IsString()
   @MaxLength(5000)
   content?: string;
+}
+
+// ──────────────────────────────────────────────
+// Episode Plan InputType
+// ──────────────────────────────────────────────
+
+@InputType()
+export class SuggestEpisodeDivisionInput {
+  @Field(() => String)
+  @IsString()
+  @IsUUID()
+  novelId: string;
+
+  @Field()
+  @IsString()
+  @MaxLength(50000)
+  plotSummary: string;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(1000)
+  @Max(10000)
+  targetCharsPerEpisode?: number;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  genre?: string;
 }
