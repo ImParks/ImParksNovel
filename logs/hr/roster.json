@@ -1,0 +1,255 @@
+{
+  "agents": [
+    {
+      "name": "hr-manager",
+      "department": "management",
+      "type": "hr-manager",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "initial-setup",
+      "file_path": ".claude/agents/hr-manager/AGENT.md"
+    },
+    {
+      "name": "director",
+      "department": "management",
+      "type": "director",
+      "status": "deprecated",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-002-2026-03-21",
+      "file_path": ".claude/agents/director/AGENT.md",
+      "deprecated_at": "2026-03-27",
+      "deprecated_reason": "메인 Claude가 Director 역할을 직접 수행. 이 에이전트는 역할 정의 참조용으로 보존됨. (pipeline-005 Design Council 토론 합의)"
+    },
+    {
+      "name": "supervisor",
+      "department": "management",
+      "type": "supervisor",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-002-2026-03-21",
+      "file_path": ".claude/agents/supervisor/AGENT.md"
+    },
+    {
+      "name": "design-council",
+      "department": "design",
+      "type": "design-council",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-002-2026-03-21",
+      "file_path": ".claude/agents/design-council/AGENT.md"
+    },
+    {
+      "name": "producer",
+      "department": "production",
+      "type": "producer",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-002-2026-03-21",
+      "file_path": ".claude/agents/producer/AGENT.md"
+    },
+    {
+      "name": "qc-inspector",
+      "department": "quality",
+      "type": "qc-inspector",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-002-2026-03-21",
+      "file_path": ".claude/agents/qc-inspector/AGENT.md"
+    },
+    {
+      "name": "git-manager",
+      "department": "infrastructure",
+      "type": "git-manager",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-002-2026-03-21",
+      "file_path": ".claude/agents/git-manager/AGENT.md"
+    },
+    {
+      "name": "reporter",
+      "department": "reporting",
+      "type": "reporter",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-002-2026-03-21",
+      "file_path": ".claude/agents/reporter/AGENT.md"
+    },
+    {
+      "name": "frontend-specialist",
+      "department": "design",
+      "type": "specialist",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-003-2026-03-21",
+      "file_path": ".claude/agents/frontend-specialist/AGENT.md"
+    },
+    {
+      "name": "backend-specialist",
+      "department": "design",
+      "type": "specialist",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-003-2026-03-21",
+      "file_path": ".claude/agents/backend-specialist/AGENT.md"
+    },
+    {
+      "name": "db-specialist",
+      "department": "design",
+      "type": "specialist",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-003-2026-03-21",
+      "file_path": ".claude/agents/db-specialist/AGENT.md"
+    },
+    {
+      "name": "infra-specialist",
+      "department": "design",
+      "type": "specialist",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-003-2026-03-21",
+      "file_path": ".claude/agents/infra-specialist/AGENT.md"
+    },
+    {
+      "name": "payment-specialist",
+      "department": "design",
+      "type": "specialist",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-003-2026-03-21",
+      "file_path": ".claude/agents/payment-specialist/AGENT.md"
+    },
+    {
+      "name": "ai-specialist",
+      "department": "design",
+      "type": "specialist",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "created_by": "hr-proposal-003-2026-03-21",
+      "file_path": ".claude/agents/ai-specialist/AGENT.md"
+    }
+  ],
+  "skills": [
+    {
+      "name": "agent-manual",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/agent-manual/SKILL.md",
+      "assigned_to": [
+        "hr-manager",
+        "director",
+        "supervisor",
+        "design-council",
+        "producer",
+        "qc-inspector",
+        "git-manager",
+        "reporter",
+        "frontend-specialist",
+        "backend-specialist",
+        "db-specialist",
+        "infra-specialist",
+        "payment-specialist",
+        "ai-specialist"
+      ],
+      "description": "에이전트 운영 매뉴얼"
+    },
+    {
+      "name": "agent-creator",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/agent-creator/SKILL.md",
+      "assigned_to": ["hr-manager"],
+      "description": "에이전트/스킬 생성 도구"
+    },
+    {
+      "name": "claude-md-manager",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/claude-md-manager/SKILL.md",
+      "assigned_to": ["hr-manager"],
+      "description": "CLAUDE.md 관리"
+    },
+    {
+      "name": "claude-code-tech",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/claude-code-tech/SKILL.md",
+      "assigned_to": [],
+      "description": "Claude Code 최신 기술 조사 및 적용 분석"
+    },
+    {
+      "name": "nextjs-dev",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/nextjs-dev/SKILL.md",
+      "assigned_to": ["frontend-specialist"],
+      "description": "Next.js 14+ App Router, Atomic Design, SSR/SSG/ISR, 서버/클라이언트 컴포넌트 분리"
+    },
+    {
+      "name": "nestjs-dev",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/nestjs-dev/SKILL.md",
+      "assigned_to": ["backend-specialist"],
+      "description": "NestJS DDD+Hexagonal Architecture, Port 패턴, GraphQL, Prisma, BullMQ, Saga"
+    },
+    {
+      "name": "postgresql-dev",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/postgresql-dev/SKILL.md",
+      "assigned_to": ["db-specialist"],
+      "description": "PostgreSQL 스키마 설계, JSONB/TEXT, 인덱싱 전략, Prisma 스키마"
+    },
+    {
+      "name": "redis-dev",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/redis-dev/SKILL.md",
+      "assigned_to": ["db-specialist"],
+      "description": "Redis 캐싱 전략, Sorted Set 랭킹, 세션 관리, AI 토큰 잔액 캐싱"
+    },
+    {
+      "name": "elasticsearch-dev",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/elasticsearch-dev/SKILL.md",
+      "assigned_to": ["db-specialist"],
+      "description": "Elasticsearch/OpenSearch, nori 한글 형태소 분석, 소설 검색, 자동완성"
+    },
+    {
+      "name": "aws-infra",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/aws-infra/SKILL.md",
+      "assigned_to": ["infra-specialist"],
+      "description": "ECS Fargate, ALB, S3+CloudFront, RDS, ElastiCache, OpenSearch, SQS/SNS, GitHub Actions"
+    },
+    {
+      "name": "docker-dev",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/docker-dev/SKILL.md",
+      "assigned_to": ["infra-specialist"],
+      "description": "Dockerfile 멀티스테이지 빌드, Docker Compose 로컬 환경, ECR 이미지 관리"
+    },
+    {
+      "name": "toss-payments",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/toss-payments/SKILL.md",
+      "assigned_to": ["payment-specialist"],
+      "description": "토스페이먼츠 REST API, 빌링키 정기결제, 웹훅 처리, 멱등성, 정산"
+    },
+    {
+      "name": "ai-integration",
+      "status": "active",
+      "created_at": "2026-03-21",
+      "path": ".claude/skills/ai-integration/SKILL.md",
+      "assigned_to": ["ai-specialist"],
+      "description": "OpenAI/Claude API, SSE 스트리밍, 토큰 카운팅, 사전충전→차감 과금, 멀티 프로바이더 failover"
+    }
+  ],
+  "updated_at": "2026-03-27",
+  "last_change": "hr-proposal-005-2026-03-27"
+}

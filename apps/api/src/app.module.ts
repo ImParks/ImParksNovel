@@ -6,6 +6,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { join } from 'path';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AuthModule } from './common/auth/auth.module';
+import { LoggerModule } from './common/logger/logger.module';
+import { SentryModule } from './common/sentry/sentry.module';
 import { UserModule } from './domains/user/user.module';
 import { NovelModule } from './domains/novel/novel.module';
 import { AiModule } from './domains/ai/ai.module';
@@ -41,6 +43,8 @@ import { SystemModule } from './domains/system/system.module';
 
     PrismaModule,
     AuthModule,
+    LoggerModule,
+    SentryModule,
 
     // Domain Modules
     UserModule,

@@ -1,0 +1,77 @@
+# 소설 생성 및 관리 뮤테이션
+
+mutation CreateNovel($input: CreateNovelInput!) {
+  createNovel(input: $input) {
+    id
+    title
+    synopsis
+    description
+    coverImageUrl
+    authorId
+    genreId
+    tags
+    status
+    createdAt
+  }
+}
+
+mutation UpdateNovel($id: ID!, $input: UpdateNovelInput!) {
+  updateNovel(id: $id, input: $input) {
+    id
+    title
+    synopsis
+    description
+    coverImageUrl
+    genreId
+    tags
+    status
+    updatedAt
+  }
+}
+
+mutation DeleteNovel($id: ID!) {
+  deleteNovel(id: $id) {
+    success
+  }
+}
+
+mutation CreateEpisode($input: CreateEpisodeInput!) {
+  createEpisode(input: $input) {
+    id
+    novelId
+    title
+    episodeNumber
+    content
+    wordCount
+    isLocked
+    isPremium
+    createdAt
+  }
+}
+
+mutation UpdateEpisode($id: ID!, $input: UpdateEpisodeInput!) {
+  updateEpisode(id: $id, input: $input) {
+    id
+    title
+    content
+    wordCount
+    isLocked
+    isPremium
+    updatedAt
+  }
+}
+
+mutation DeleteEpisode($id: ID!) {
+  deleteEpisode(id: $id) {
+    success
+  }
+}
+
+mutation PublishEpisode($id: ID!) {
+  publishEpisode(id: $id) {
+    id
+    title
+    status
+    publishedAt
+  }
+}
