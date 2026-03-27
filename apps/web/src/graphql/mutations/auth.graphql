@@ -1,0 +1,56 @@
+# 인증 관련 뮤테이션
+
+mutation SignIn($input: SignInInput!) {
+  signIn(input: $input) {
+    accessToken
+    refreshToken
+    user {
+      id
+      email
+      nickname
+      role
+    }
+  }
+}
+
+mutation SignUp($input: SignUpInput!) {
+  signUp(input: $input) {
+    accessToken
+    refreshToken
+    user {
+      id
+      email
+      nickname
+      role
+    }
+  }
+}
+
+mutation SignOut {
+  signOut {
+    success
+  }
+}
+
+mutation RefreshToken($refreshToken: String!) {
+  refreshToken(refreshToken: $refreshToken) {
+    accessToken
+    refreshToken
+  }
+}
+
+mutation UpdateProfile($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    id
+    nickname
+    avatarUrl
+    bio
+    website
+  }
+}
+
+mutation ChangePassword($input: ChangePasswordInput!) {
+  changePassword(input: $input) {
+    success
+  }
+}

@@ -28,8 +28,79 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      # TODO: AWS ECS Fargate 배포 단계 추가
-      # - Configure AWS credentials
-      # - Build and push Docker images to ECR
-      # - Update ECS task definitions
-      # - Deploy to ECS services
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push API Image
+        run: |
+          docker build -t ${{ steps.ecr.outputs.registry }}/vibe-api:${{ github.sha }} -f apps/api/Dockerfile . --target production
+          docker tag ${{ steps.ecr.outputs.registry }}/vibe-api:${{ github.sha }} ${{ steps.ecr.outputs.registry }}/vibe-api:latest
+          docker push ${{ steps.ecr.outputs.registry }}/vibe-api:${{ github.sha }}
+          docker push ${{ steps.ecr.outputs.registry }}/vibe-api:latest
+
+      - name: Build and Push Web Image
+        run: |
+          docker build -t ${{ steps.ecr.outputs.registry }}/vibe-web:${{ github.sha }} -f apps/web/Dockerfile . --target production
+          docker tag ${{ steps.ecr.outputs.registry }}/vibe-web:${{ github.sha }} ${{ steps.ecr.outputs.registry }}/vibe-web:latest
+          docker push ${{ steps.ecr.outputs.registry }}/vibe-web:${{ github.sha }}
+          docker push ${{ steps.ecr.outputs.registry }}/vibe-web:latest
+
+      - name: Deploy to ECS (Production)
+        run: |
+          aws ecs update-service \
+            --cluster vibe-production \
+            --service vibe-api \
+            --force-new-deployment \
+            --region ap-northeast-2
+
+          aws ecs update-service \
+            --cluster vibe-production \
+            --service vibe-web \
+            --force-new-deployment \
+            --region ap-northeast-2
+
+      - name: Notify Slack on Success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "Production deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ Production deployment successful\n*Branch:* main\n*Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify Slack on Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "Production deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ Production deployment failed\n*Branch:* main\n*Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}>\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }

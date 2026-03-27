@@ -1,0 +1,69 @@
+# 결제 및 월렛 관련 쿼리
+
+query GetUserWallet {
+  userWallet {
+    id
+    userId
+    coins
+    totalSpent
+    updatedAt
+  }
+}
+
+query GetCoinPackages {
+  coinPackages {
+    id
+    name
+    coins
+    price
+    discount
+    badge
+    isPopular
+  }
+}
+
+query GetMembershipPlans {
+  membershipPlans {
+    id
+    name
+    monthlyPrice
+    annualPrice
+    features
+    isActive
+  }
+}
+
+query GetPurchaseHistory($limit: Int, $offset: Int) {
+  purchaseHistory(limit: $limit, offset: $offset) {
+    edges {
+      id
+      type
+      itemId
+      itemName
+      amount
+      coins
+      price
+      paymentMethod
+      status
+      createdAt
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      totalCount
+    }
+  }
+}
+
+query GetUserMembership {
+  userMembership {
+    id
+    userId
+    planId
+    planName
+    startDate
+    endDate
+    isActive
+    autoRenewal
+  }
+}

@@ -1,0 +1,124 @@
+# 소설 목록 및 검색 관련 쿼리
+
+query SearchNovels($keyword: String!, $limit: Int, $offset: Int) {
+  searchNovels(keyword: $keyword, limit: $limit, offset: $offset) {
+    id
+    title
+    synopsis
+    coverImageUrl
+    authorName
+    genreName
+    tags
+    status
+    totalEpisodes
+    totalViews
+    totalLikes
+    rating
+    createdAt
+  }
+}
+
+query GetNovel($id: ID!) {
+  novel(id: $id) {
+    id
+    title
+    synopsis
+    description
+    coverImageUrl
+    authorId
+    authorName
+    authorAvatarUrl
+    genreId
+    genreName
+    tags
+    status
+    totalEpisodes
+    totalViews
+    totalLikes
+    rating
+    ratingCount
+    createdAt
+    updatedAt
+  }
+}
+
+query GetNovelEpisodes($novelId: ID!, $limit: Int, $offset: Int) {
+  novelEpisodes(novelId: $novelId, limit: $limit, offset: $offset) {
+    edges {
+      id
+      title
+      episodeNumber
+      isLocked
+      isPremium
+      content
+      wordCount
+      viewCount
+      createdAt
+      updatedAt
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      totalCount
+    }
+  }
+}
+
+query GetTrendingNovels($limit: Int!) {
+  trendingNovels(limit: $limit) {
+    id
+    title
+    synopsis
+    coverImageUrl
+    authorName
+    genreName
+    tags
+    status
+    totalEpisodes
+    totalViews
+    totalLikes
+    rating
+    createdAt
+  }
+}
+
+query GetRankingNovels($period: String!, $genre: String, $limit: Int) {
+  rankingNovels(period: $period, genre: $genre, limit: $limit) {
+    id
+    title
+    synopsis
+    coverImageUrl
+    authorName
+    genreName
+    totalViews
+    totalLikes
+    rating
+    rank
+    createdAt
+  }
+}
+
+query GetNovelsByGenre($genreId: ID!, $limit: Int, $offset: Int) {
+  novelsByGenre(genreId: $genreId, limit: $limit, offset: $offset) {
+    edges {
+      id
+      title
+      synopsis
+      coverImageUrl
+      authorName
+      genreName
+      tags
+      status
+      totalEpisodes
+      totalViews
+      totalLikes
+      rating
+      createdAt
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      totalCount
+    }
+  }
+}
