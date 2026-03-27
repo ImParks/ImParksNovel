@@ -42,8 +42,11 @@ pnpm-debug.log*
 docker-data/
 
 # Claude Code (local agent config/memory)
-.claude/
+.claude/agent-memory/
 .mcp.json
 
-# Logs
-logs/
+# Logs (except HR records)
+logs/pipelines/
+logs/design-council/
+logs/quality/
+logs/reports/
