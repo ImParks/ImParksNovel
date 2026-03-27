@@ -221,8 +221,6 @@ export default function EpisodePage() {
 
         // 3. 이전/다음 에피소드 조회 (간단한 로직: 현재 번호 ±1)
         // TODO: API에서 이전/다음 에피소드 ID를 직접 제공하도록 개선 필요
-        const currentEpisodeNumber = episodeData.episodeNumber;
-
         // 데이터 설정
         setEpisode({
           id: episodeData.id,

@@ -4,6 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CoinTransactionType, PurchaseType, MembershipTier, MembershipStatus } from '@prisma/client';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { PaymentRepository } from '../infrastructure/payment.repository';
@@ -17,6 +18,7 @@ import {
   EpisodeOwnershipObject,
   EpisodeOwnershipConnection,
   MembershipObject,
+  PaymentConfigObject,
   PaymentPrepareObject,
   SettlementObject,
   AuthorDashboardObject,
@@ -59,7 +61,18 @@ export class PaymentService {
     private readonly prisma: PrismaService,
     private readonly paymentRepository: PaymentRepository,
     private readonly tossPayments: TossPaymentsAdapter,
+    private readonly config: ConfigService,
   ) {}
+
+  // ──────────────────────────────────────────────
+  // Payment Config (public)
+  // ──────────────────────────────────────────────
+
+  getPaymentConfig(): PaymentConfigObject {
+    return {
+      clientKey: this.config.getOrThrow<string>('TOSS_CLIENT_KEY'),
+    };
+  }
 
   // ──────────────────────────────────────────────
   // Coin: Queries

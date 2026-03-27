@@ -206,7 +206,7 @@ export default function MyPage() {
                         <div
                           className="bg-primary-500 h-1.5 rounded-full"
                           style={{
-                            width: `${(parseInt(novel.lastReadEpisode) / novel.totalEpisodes) * 100}%`,
+                            width: `${(parseInt(String(novel.lastReadEpisode)) / novel.totalEpisodes) * 100}%`,
                           }}
                         />
                       </div>

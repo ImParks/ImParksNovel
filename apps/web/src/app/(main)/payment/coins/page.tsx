@@ -13,6 +13,7 @@ import {
   COIN_TRANSACTIONS_QUERY,
   PREPARE_COIN_CHARGE_MUTATION,
   CONFIRM_COIN_CHARGE_MUTATION,
+  PAYMENT_CONFIG_QUERY,
 } from '@/lib/graphql-queries';
 
 const COIN_PACKAGES: CoinPackage[] = [
@@ -129,6 +130,12 @@ interface ConfirmChargeResponse {
   };
 }
 
+interface PaymentConfigResponse {
+  paymentConfig: {
+    clientKey: string;
+  };
+}
+
 export default function CoinsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
@@ -139,6 +146,7 @@ export default function CoinsPage() {
   const [apiBalance, setApiBalance] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<PaymentHistory[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [clientKey, _setClientKey] = useState<string | null>(null);
 
   const selectedPackage = COIN_PACKAGES.find((p) => p.id === selectedPackageId);
 
@@ -157,6 +165,14 @@ export default function CoinsPage() {
       setIsLoadingData(true);
 
       try {
+        // 결제 설정 조회 (clientKey)
+        try {
+          const configData = await gql<PaymentConfigResponse>(PAYMENT_CONFIG_QUERY);
+          _setClientKey(configData.paymentConfig.clientKey);
+        } catch (error) {
+          console.warn('결제 설정 API 실패:', error);
+        }
+
         // 코인 잔액 조회
         try {
           const balanceData = await gql<CoinBalanceResponse>(COIN_BALANCE_QUERY);
@@ -207,8 +223,13 @@ export default function CoinsPage() {
         packageId: selectedPackage.id,
       });
 
-      // Step 2: 실제 환경에서는 여기서 Toss Payments 위젯을 호출해야 함
-      // 테스트 환경에서는 즉시 확인 단계로 진행 (시뮬레이션)
+      // Step 2: Toss Payments 위젯으로 결제 진행
+      // TODO: @tosspayments/sdk 설치 후 PaymentWidget 연동
+      // clientKey는 백엔드에서 가져온 값 사용: clientKey state
+      // 현재는 테스트용 시뮬레이션
+      if (!clientKey) {
+        console.warn('Toss clientKey 미설정 — 결제 시뮬레이션 모드');
+      }
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Step 3: 결제 확인

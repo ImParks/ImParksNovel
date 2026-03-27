@@ -116,7 +116,7 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
   const [loading, setLoading] = useState(true);
   const [novelData, setNovelData] = useState<any>(null);
   const [episodes, setEpisodes] = useState<any[]>([]);
-  const [, setAuthorProfile] = useState<any>(null);
+  const [, _setAuthorProfile] = useState<any>(null);
   const [similarNovels, setSimilarNovels] = useState<any[]>([]);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -229,7 +229,7 @@ export default function NovelDetailPage({ params }: NovelPageProps) {
           genreName: item.novel.genreName,
         })));
 
-        setAuthorProfile(authorResult.authorProfile);
+        _setAuthorProfile(authorResult.authorProfile);
         setLoading(false);
       } catch (error) {
         console.error('Failed to fetch novel data:', error);

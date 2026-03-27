@@ -13,6 +13,7 @@ import {
   PREPARE_MEMBERSHIP_SUBSCRIPTION_MUTATION,
   CONFIRM_MEMBERSHIP_SUBSCRIPTION_MUTATION,
   CANCEL_MEMBERSHIP_MUTATION,
+  PAYMENT_CONFIG_QUERY,
 } from '@/lib/graphql-queries';
 
 const MEMBERSHIP_PLANS: MembershipPlan[] = [
@@ -88,6 +89,12 @@ interface CancelMembershipResponse {
   };
 }
 
+interface PaymentConfigResponse {
+  paymentConfig: {
+    clientKey: string;
+  };
+}
+
 // 백엔드 tier를 프론트엔드 plan id로 매핑
 function tierToPlanId(tier: string): string {
   return tier.toLowerCase();
@@ -112,6 +119,7 @@ export default function MembershipPage() {
     endDate: string;
   } | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [clientKey, _setClientKey] = useState<string | null>(null);
 
   const currentPlan = apiMembership
     ? MEMBERSHIP_PLANS.find((p) => p.id === tierToPlanId(apiMembership.tier))
@@ -136,6 +144,14 @@ export default function MembershipPage() {
       setIsLoadingData(true);
 
       try {
+        // 결제 설정 조회 (clientKey)
+        try {
+          const configData = await gql<PaymentConfigResponse>(PAYMENT_CONFIG_QUERY);
+          _setClientKey(configData.paymentConfig.clientKey);
+        } catch (error) {
+          console.warn('결제 설정 API 실패:', error);
+        }
+
         const membershipData = await gql<MyMembershipResponse>(MY_MEMBERSHIP_QUERY);
 
         if (membershipData.myMembership && membershipData.myMembership.isActive) {
@@ -176,8 +192,13 @@ export default function MembershipPage() {
         }
       );
 
-      // Step 2: 실제 환경에서는 여기서 Toss Payments 위젯을 호출해야 함
-      // 테스트 환경에서는 즉시 확인 단계로 진행 (시뮬레이션)
+      // Step 2: Toss Payments 위젯으로 결제 진행
+      // TODO: @tosspayments/sdk 설치 후 PaymentWidget 연동
+      // clientKey는 백엔드에서 가져온 값 사용: clientKey state
+      // 현재는 테스트용 시뮬레이션
+      if (!clientKey) {
+        console.warn('Toss clientKey 미설정 — 결제 시뮬레이션 모드');
+      }
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Step 3: 결제 확인

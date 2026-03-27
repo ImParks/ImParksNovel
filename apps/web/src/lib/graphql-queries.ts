@@ -567,6 +567,14 @@ export const RENT_EPISODE_MUTATION = `
   }
 `;
 
+export const PAYMENT_CONFIG_QUERY = `
+  query PaymentConfig {
+    paymentConfig {
+      clientKey
+    }
+  }
+`;
+
 export const PREPARE_COIN_CHARGE_MUTATION = `
   mutation PrepareCoinCharge($packageId: ID!) {
     prepareCoinCharge(packageId: $packageId) {
