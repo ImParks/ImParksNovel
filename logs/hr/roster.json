@@ -127,6 +127,15 @@
       "created_at": "2026-03-21",
       "created_by": "hr-proposal-003-2026-03-21",
       "file_path": ".claude/agents/ai-specialist/AGENT.md"
+    },
+    {
+      "name": "frontend-qa",
+      "department": "quality",
+      "type": "specialist",
+      "status": "active",
+      "created_at": "2026-03-27",
+      "created_by": "hr-proposal-006-2026-03-27",
+      "file_path": ".claude/agents/frontend-qa/AGENT.md"
     }
   ],
   "skills": [
@@ -149,7 +158,8 @@
         "db-specialist",
         "infra-specialist",
         "payment-specialist",
-        "ai-specialist"
+        "ai-specialist",
+        "frontend-qa"
       ],
       "description": "에이전트 운영 매뉴얼"
     },
@@ -182,7 +192,7 @@
       "status": "active",
       "created_at": "2026-03-21",
       "path": ".claude/skills/nextjs-dev/SKILL.md",
-      "assigned_to": ["frontend-specialist"],
+      "assigned_to": ["frontend-specialist", "frontend-qa"],
       "description": "Next.js 14+ App Router, Atomic Design, SSR/SSG/ISR, 서버/클라이언트 컴포넌트 분리"
     },
     {
@@ -251,5 +261,5 @@
     }
   ],
   "updated_at": "2026-03-27",
-  "last_change": "hr-proposal-005-2026-03-27"
+  "last_change": "hr-proposal-006-2026-03-27"
 }
