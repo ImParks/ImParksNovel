@@ -12,6 +12,7 @@ import {
   EpisodeOwnershipObject,
   EpisodeOwnershipConnection,
   MembershipObject,
+  PaymentConfigObject,
   PaymentPrepareObject,
   SettlementObject,
   AuthorDashboardObject,
@@ -21,6 +22,15 @@ import {
 @Resolver()
 export class PaymentResolver {
   constructor(private readonly paymentService: PaymentService) {}
+
+  // ──────────────────────────────────────────────
+  // Payment Config (public - no auth required)
+  // ──────────────────────────────────────────────
+
+  @Query(() => PaymentConfigObject)
+  async paymentConfig(): Promise<PaymentConfigObject> {
+    return this.paymentService.getPaymentConfig();
+  }
 
   // ──────────────────────────────────────────────
   // Coin Queries

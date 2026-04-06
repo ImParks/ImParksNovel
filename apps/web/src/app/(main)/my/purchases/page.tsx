@@ -148,6 +148,7 @@ export default function PurchasesPage() {
         const data = await gql<{
           purchaseHistory: {
             edges: Array<{ node: PurchaseHistoryNode }>,
+            pageInfo: { hasNextPage: boolean; endCursor: string | null },
             totalCount: number
           }
         }>(

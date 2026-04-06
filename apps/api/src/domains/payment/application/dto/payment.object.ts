@@ -159,6 +159,16 @@ export class MembershipObject {
 }
 
 // ──────────────────────────────────────────────
+// Payment Config (public)
+// ──────────────────────────────────────────────
+
+@ObjectType()
+export class PaymentConfigObject {
+  @Field()
+  clientKey: string;
+}
+
+// ──────────────────────────────────────────────
 // Payment Preparation
 // ──────────────────────────────────────────────
 
